@@ -5,9 +5,12 @@
   "description": "Astropeer, a Phaser arcade game",
   "type": "module",
   "scripts": {
+    "predev": "npm run sprites",
     "dev": "vite --host",
+    "prebuild": "npm run sprites",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sprites": "node scripts/generate-sprites.mjs"
   },
   "dependencies": {
     "phaser": "^4.2.1"

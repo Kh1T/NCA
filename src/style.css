@@ -134,6 +134,32 @@ a:focus-visible {
   gap: 22px;
 }
 
+.walk-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 11px;
+  border: 1px solid rgba(104, 216, 206, 0.3);
+  border-radius: 7px;
+  color: var(--teal);
+  background: rgba(104, 216, 206, 0.07);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+.walk-link:hover {
+  color: var(--text);
+  border-color: var(--teal);
+  background: rgba(104, 216, 206, 0.13);
+}
+
+.walk-link span {
+  font-size: 11px;
+}
+
 .restart-button {
   padding: 9px 11px;
   border: 1px solid var(--line);
@@ -1541,6 +1567,11 @@ a:focus-visible {
   }
 
   .restart-button {
+    padding: 8px;
+    font-size: 8px;
+  }
+
+  .walk-link {
     padding: 8px;
     font-size: 8px;
   }

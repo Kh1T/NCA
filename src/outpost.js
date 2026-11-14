@@ -502,7 +502,7 @@ function renderMission(root, state) {
         <span class="brand-mark">AP</span><span class="brand-name">ASTROPEER<span>MISSION CONTROL</span></span>
       </a>
       <div class="top-status"><span class="status-light"></span> MARS SURFACE MISSION</div>
-      <div class="top-actions"><span class="mission-code">JZ-04 · CREW ${String(CREW_SIZE).padStart(2, "0")}</span><button type="button" class="restart-button" data-action="restart">RESTART</button></div>
+      <div class="top-actions"><a class="walk-link" href="./sprites/play.html">SURFACE WALK <span aria-hidden="true">↗</span></a><span class="mission-code">JZ-04 · CREW ${String(CREW_SIZE).padStart(2, "0")}</span><button type="button" class="restart-button" data-action="restart">RESTART</button></div>
     </header>
     <main class="main-layout">
       <section class="mission-heading">
@@ -545,7 +545,7 @@ function renderFinished(root, state) {
   const remaining = ["air", "water", "food", "power", "shield"].map((key) => `<div class="final-stat"><span>${RESOURCE_INFO[key].label}</span><strong>${state[key]}<small> / ${LIMITS[key]}</small></strong></div>`).join("");
   const lessons = state.history.slice(-3).map((item) => `<li><span>SOL ${String(item.sol).padStart(2, "0")}</span><span>${item.choiceTitle}</span></li>`).join("");
   root.innerHTML = `<div class="app-shell finish-shell">
-    <header class="topbar"><div class="brand"><span class="brand-mark">AP</span><span class="brand-name">ASTROPEER<span>MISSION CONTROL</span></span></div><div class="top-status"><span class="status-light"></span> MISSION REPORT</div><span class="mission-code">JZ-04 · CREW ${String(CREW_SIZE).padStart(2, "0")}</span></header>
+    <header class="topbar"><div class="brand"><span class="brand-mark">AP</span><span class="brand-name">ASTROPEER<span>MISSION CONTROL</span></span></div><div class="top-status"><span class="status-light"></span> MISSION REPORT</div><div class="top-actions"><span class="mission-code">JZ-04 · CREW ${String(CREW_SIZE).padStart(2, "0")}</span><a class="walk-link" href="./sprites/play.html">SURFACE WALK <span aria-hidden="true">↗</span></a></div></header>
     <main class="finish-layout"><section class="finish-hero"><div class="eyebrow">SIX-SOL MISSION REPORT <span> / </span> JEZERO CRATER</div><h1>${title}</h1><p>${summary}</p><div class="finish-stamp"><span class="stamp-ring">${complete ? "OK" : "!"}</span><span>${complete ? "CREW SAFE" : "SAFETY LIMIT REACHED"}<small>FINAL CREW HEALTH · ${state.health}%</small></span></div></section>
       <section class="finish-grid"><article class="final-card"><div class="section-kicker">FINAL RESERVES</div><div class="final-stats">${remaining}</div><div class="research-score"><span>RESEARCH POINTS</span><strong>${state.science}</strong></div><div class="garden-score"><span>GARDEN GROWTH</span><strong>${state.cropProgress} / 2 shifts</strong></div></article>
       <article class="final-card lessons-card"><div class="section-kicker">YOUR CREW'S FIELD LOG</div>${lessons ? `<ol>${lessons}</ol>` : `<p>Your crew is ready to choose its first plan.</p>`}<div class="finish-lesson"><strong>Mission lesson</strong><p>Earth can advise, but a Mars crew needs supplies, shelter, and a plan it can use before a message arrives.</p></div></article></section>
