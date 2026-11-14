@@ -1,3 +1,5 @@
+import { GLOSSARY, HOW_TO_PLAY } from "./content.js";
+
 const CREW_SIZE = 4;
 const SOL_COUNT = 6;
 const LIMITS = { air: 10, water: 10, food: 10, power: 12, shield: 3, health: 100, morale: 100 };
@@ -276,6 +278,7 @@ const SOLS = [
 
 function freshState() {
   return {
+    screen: "home",
     phase: "plan",
     solIndex: 0,
     selectedChoiceId: null,
@@ -491,6 +494,74 @@ function renderPlan(state, scenario) {
   </div>`;
 }
 
+function renderTopbar(statusLabel) {
+  return `<header class="topbar">
+      <a class="brand" href="#" data-action="home" aria-label="Astropeer home">
+        <span class="brand-mark">AP</span><span class="brand-name">ASTROPEER<span>MISSION CONTROL</span></span>
+      </a>
+      <div class="top-status"><span class="status-light"></span> ${statusLabel}</div>
+      <div class="top-actions"><a class="walk-link" href="./sprites/play.html">SURFACE WALK <span aria-hidden="true">↗</span></a><span class="mission-code">JZ-04 · CREW ${String(CREW_SIZE).padStart(2, "0")}</span></div>
+    </header>`;
+}
+
+function renderMenuButton(action, title, hint, primary) {
+  return `<button class="menu-button${primary ? " primary" : ""}" type="button" data-action="${action}">
+    <span class="menu-body"><span class="menu-title">${title}</span><span class="menu-hint">${hint}</span></span>
+    <span class="menu-arrow" aria-hidden="true">→</span>
+  </button>`;
+}
+
+function renderHome(root, state) {
+  const scenario = SOLS[state.solIndex];
+  const running = state.history.length > 0;
+  root.innerHTML = `<div class="app-shell">
+    ${renderTopbar("MISSION BRIEFING")}
+    <main class="main-layout">
+      <section class="mission-heading">
+        <div><div class="eyebrow">MARS SURFACE TRAINING <span> / </span> JEZERO CRATER</div><h1>Keep the outpost <em>ready.</em></h1><p>Lead four explorers through six sols. Every system shares the same power, water, and crew time.</p></div>
+        <div class="sol-counter"><span>SOL</span><strong>${String(state.solIndex + 1).padStart(2, "0")}</strong><span>OF 06</span></div>
+      </section>
+      <div class="mission-grid">
+        <aside class="side-column">
+          <section class="outpost-card">${renderLandscape(scenario)}<div class="outpost-caption"><span><strong>RED MESA</strong><small>MARS · JEZERO CRATER</small></span><span class="site-status"><i></i>${scenario.weather}</span></div></section>
+          ${renderFact(FACTS[0])}
+        </aside>
+        <section class="operations-column">
+          <section class="decision-card">
+            <div class="decision-head"><div><div class="section-kicker">FLIGHT PLAN</div><h2>Ready when you are, Commander.</h2><p>${running ? `Your crew is mid-mission at Sol ${state.solIndex + 1} with ${state.history.length} decision${state.history.length > 1 ? "s" : ""} logged. Start resumes that run.` : "Start the six-sol simulation, or read the rules and the terms first."}</p></div><span class="event-mark">00<small>/06</small></span></div>
+            <nav class="home-menu" aria-label="Main menu">
+              ${renderMenuButton("start", "Start Mission", running ? `Resume Sol ${state.solIndex + 1}` : "Six sols · one plan each", true)}
+              ${renderMenuButton("help", "How to Play", "Six rules on sols, costs, and crew")}
+              ${renderMenuButton("glossary", "Glossary", `${GLOSSARY.length} Mars and habitat terms`)}
+            </nav>
+          </section>
+          <section class="timeline-card"><div class="timeline-heading"><div><div class="section-kicker">MISSION TIMELINE</div><span>${state.solIndex} of ${SOL_COUNT} sols complete</span></div><span class="timeline-legend"><i></i> COMPLETE <i class="legend-current"></i> CURRENT</span></div>${renderTimeline(state)}</section>
+        </section>
+      </div>
+      <footer class="site-footer"><span>TRAINING SIMULATION · NOT FLIGHT GUIDANCE</span><span>All game meters are simplified, not hardware measurements.</span></footer>
+    </main>
+  </div>`;
+}
+
+function renderGuide(root, state, kind) {
+  const glossary = kind === "glossary";
+  const body = glossary
+    ? `<div class="term-grid">${GLOSSARY.map((item) => `<article class="term-card"><div class="section-kicker">${item.tag}</div><h3>${item.term}</h3><p>${item.definition}</p></article>`).join("")}</div>`
+    : `<ol class="rule-list">${HOW_TO_PLAY.map((item, index) => `<li><span class="rule-index" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span><div><h3>${item.title}</h3><p>${item.text}</p></div></li>`).join("")}</ol>`;
+  root.innerHTML = `<div class="app-shell">
+    ${renderTopbar(glossary ? "GLOSSARY" : "HOW TO PLAY")}
+    <main class="main-layout">
+      <section class="mission-heading">
+        <div><div class="eyebrow">MISSION BRIEFING <span> / </span> ${glossary ? "TERMS" : "RULES"}</div><h1>${glossary ? "Words the crew " : "Six rules before "}<em>${glossary ? "uses." : "you fly."}</em></h1><p>${glossary ? "Mars and habitat vocabulary used in the mission log, the plan cards, and the debrief." : "How a sol works, what a plan really costs, and how the mission ends."}</p></div>
+        <div class="sol-counter"><span>${glossary ? "TERMS" : "RULES"}</span><strong>${glossary ? GLOSSARY.length : HOW_TO_PLAY.length}</strong><span>LISTED</span></div>
+      </section>
+      <section class="guide-card">${body}</section>
+      <div class="commit-row"><span class="commit-hint">Nothing here changes your mission. Crew supplies are untouched.</span><button class="primary-button" type="button" data-action="home">Back to briefing<span aria-hidden="true">→</span></button></div>
+      <footer class="site-footer"><span>TRAINING SIMULATION · NOT FLIGHT GUIDANCE</span><span>NASA facts are linked in the field notes. All game meters are simplified.</span></footer>
+    </main>
+  </div>`;
+}
+
 function renderMission(root, state) {
   const scenario = SOLS[state.solIndex];
   const fact = FACTS[scenario.fact];
@@ -498,7 +569,7 @@ function renderMission(root, state) {
   const phaseText = state.phase === "review" ? "SHIFT REVIEW" : "OUTPOST OPERATIONS";
   root.innerHTML = `<div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="Astropeer mission control">
+      <a class="brand" href="#" data-action="home" aria-label="Astropeer home">
         <span class="brand-mark">AP</span><span class="brand-name">ASTROPEER<span>MISSION CONTROL</span></span>
       </a>
       <div class="top-status"><span class="status-light"></span> MARS SURFACE MISSION</div>
@@ -561,7 +632,9 @@ export function createOutpost(root) {
   let state = freshState();
 
   function render() {
-    if (state.phase === "finished") renderFinished(root, state);
+    if (state.screen === "home") renderHome(root, state);
+    else if (state.screen === "help" || state.screen === "glossary") renderGuide(root, state, state.screen);
+    else if (state.phase === "finished") renderFinished(root, state);
     else renderMission(root, state);
   }
 
@@ -598,8 +671,15 @@ export function createOutpost(root) {
 
   function restartMission() {
     state = freshState();
+    state.screen = null;
     render();
     root.querySelector("[data-choice]")?.focus();
+  }
+
+  function goTo(screen) {
+    state.screen = screen;
+    render();
+    root.querySelector(".menu-button, [data-action='home']")?.focus();
   }
 
   root.addEventListener("click", (event) => {
@@ -607,6 +687,7 @@ export function createOutpost(root) {
     if (!target) return;
     if (target.matches("a.brand")) {
       event.preventDefault();
+      if (state.screen !== "home") goTo("home");
       return;
     }
     if (target.dataset.choice) {
@@ -615,6 +696,15 @@ export function createOutpost(root) {
       root.querySelector(`[data-choice="${state.selectedChoiceId}"]`)?.focus();
       return;
     }
+    if (target.dataset.action === "start") {
+      state.screen = null;
+      render();
+      root.querySelector("[data-choice]")?.focus();
+      return;
+    }
+    if (target.dataset.action === "help") goTo("help");
+    if (target.dataset.action === "glossary") goTo("glossary");
+    if (target.dataset.action === "home") goTo("home");
     if (target.dataset.action === "commit") commitChoice();
     if (target.dataset.action === "continue") continueMission();
     if (target.dataset.action === "restart") restartMission();

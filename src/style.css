@@ -1474,6 +1474,143 @@ a:focus-visible {
   margin-top: 4px;
 }
 
+.home-menu {
+  display: grid;
+  gap: 8px;
+  padding: 0 17px 16px;
+}
+
+.menu-button {
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--text);
+  background: rgba(21, 35, 44, 0.7);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.menu-button:hover {
+  border-color: rgba(104, 216, 206, 0.42);
+  background: rgba(24, 41, 51, 0.88);
+  transform: translateY(-1px);
+}
+
+.menu-button.primary {
+  min-height: 74px;
+  border-color: #ff9b82;
+  color: #201513;
+  background: linear-gradient(135deg, #ff9c7e, #f47e6c);
+}
+
+.menu-button.primary:hover {
+  filter: brightness(1.08);
+}
+
+.menu-body {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.menu-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.menu-hint {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.menu-button.primary .menu-hint {
+  color: rgba(32, 21, 19, 0.68);
+}
+
+.menu-arrow {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.guide-card {
+  padding: 3px 17px 15px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(17, 28, 36, 0.92);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+}
+
+.rule-list {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  list-style: none;
+}
+
+.rule-list li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.rule-list li:last-child {
+  border-bottom: none;
+}
+
+.rule-index {
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.rule-list h3,
+.term-card h3 {
+  margin: 0 0 5px;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.rule-list p,
+.term-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.term-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(238px, 1fr));
+  gap: 12px;
+}
+
+.term-card {
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-left: 2px solid rgba(104, 216, 206, 0.45);
+  border-radius: 9px;
+  background: rgba(21, 35, 44, 0.6);
+}
+
+.term-card .section-kicker {
+  margin-bottom: 7px;
+}
+
 @media (max-width: 1120px) {
   .app-shell {
     padding-right: 24px;
@@ -1663,9 +1800,20 @@ a:focus-visible {
     padding-left: 12px;
   }
 
-  .choice-area {
+  .choice-area,
+  .home-menu {
     padding-right: 12px;
     padding-left: 12px;
+  }
+
+  .guide-card {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .rule-list li {
+    grid-template-columns: 26px minmax(0, 1fr);
+    gap: 9px;
   }
 
   .choice-card {
