@@ -1,0 +1,450 @@
+{
+ "id": "busy",
+ "label": "Busy Sun",
+ "why": "A moderately active week that includes the X1.5 flare of 3 July 2021.",
+ "reference": null,
+ "startDate": "2021-07-01",
+ "endDate": "2021-07-11",
+ "fetchedAt": "2026-11-14T10:16:10.437Z",
+ "fetchedVia": [
+  "ccmc.gsfc.nasa.gov"
+ ],
+ "source": "NASA DONKI (Space Weather Database Of Notifications, Knowledge, Information)",
+ "sourceUrl": "https://ccmc.gsfc.nasa.gov/tools/DONKI/",
+ "note": "Cached copy. Fields trimmed for size; each record links to its full DONKI page.",
+ "counts": {
+  "flaresM": 3,
+  "flaresX": 1,
+  "sep": 1,
+  "cme": 23,
+  "cmeEarthDirected": 1,
+  "gst": 0
+ },
+ "events": {
+  "FLR": [
+   {
+    "id": "2021-07-03T02:14:00-FLR-001",
+    "beginTime": "2021-07-03T02:14Z",
+    "peakTime": "2021-07-03T02:31Z",
+    "endTime": "2021-07-03T02:39Z",
+    "classType": "C5.7",
+    "sourceLocation": "N23W75",
+    "activeRegionNum": 12838,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17197/-1"
+   },
+   {
+    "id": "2021-07-03T07:04:00-FLR-001",
+    "beginTime": "2021-07-03T07:04Z",
+    "peakTime": "2021-07-03T07:17Z",
+    "endTime": "2021-07-03T07:22Z",
+    "classType": "M2.7",
+    "sourceLocation": "N23W78",
+    "activeRegionNum": 12838,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17189/-1"
+   },
+   {
+    "id": "2021-07-03T14:18:00-FLR-001",
+    "beginTime": "2021-07-03T14:18Z",
+    "peakTime": "2021-07-03T14:29Z",
+    "endTime": "2021-07-03T14:34Z",
+    "classType": "X1.5",
+    "sourceLocation": "N23W80",
+    "activeRegionNum": 12838,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17201/-1"
+   },
+   {
+    "id": "2021-07-03T16:59:00-FLR-001",
+    "beginTime": "2021-07-03T16:59Z",
+    "peakTime": "2021-07-03T17:03Z",
+    "endTime": "2021-07-03T17:14Z",
+    "classType": "M1.0",
+    "sourceLocation": "N23W82",
+    "activeRegionNum": 12838,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17208/-1"
+   },
+   {
+    "id": "2021-07-04T05:01:00-FLR-001",
+    "beginTime": "2021-07-04T05:01Z",
+    "peakTime": "2021-07-04T05:09Z",
+    "endTime": "2021-07-04T05:15Z",
+    "classType": "M1.5",
+    "sourceLocation": "N22W88",
+    "activeRegionNum": 12838,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17211/-1"
+   },
+   {
+    "id": "2021-07-05T16:36:00-FLR-001",
+    "beginTime": "2021-07-05T16:36Z",
+    "peakTime": "2021-07-05T16:50Z",
+    "endTime": "2021-07-05T17:05Z",
+    "classType": "B5.3",
+    "sourceLocation": "N23W110",
+    "activeRegionNum": 12838,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17224/-1"
+   },
+   {
+    "id": "2021-07-05T23:09:00-FLR-001",
+    "beginTime": "2021-07-05T23:09Z",
+    "peakTime": "2021-07-06T00:35Z",
+    "endTime": "2021-07-06T01:40Z",
+    "classType": "B5.7",
+    "sourceLocation": "N28W93",
+    "activeRegionNum": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17227/-1"
+   },
+   {
+    "id": "2021-07-07T15:16:00-FLR-001",
+    "beginTime": "2021-07-07T15:16Z",
+    "peakTime": "2021-07-07T15:51Z",
+    "endTime": "2021-07-07T16:30Z",
+    "classType": "B7.1",
+    "sourceLocation": "N17W50",
+    "activeRegionNum": 12837,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17239/-1"
+   },
+   {
+    "id": "2021-07-09T07:30:00-FLR-001",
+    "beginTime": "2021-07-09T07:30Z",
+    "peakTime": "2021-07-09T07:55Z",
+    "endTime": "2021-07-09T08:03Z",
+    "classType": "C6.0",
+    "sourceLocation": "N27W95",
+    "activeRegionNum": 12840,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17242/-1"
+   },
+   {
+    "id": "2021-07-09T10:31:00-FLR-001",
+    "beginTime": "2021-07-09T10:31Z",
+    "peakTime": "2021-07-09T10:50Z",
+    "endTime": "2021-07-09T10:58Z",
+    "classType": "C7.0",
+    "sourceLocation": "N27W96",
+    "activeRegionNum": 12840,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17243/-1"
+   },
+   {
+    "id": "2021-07-09T17:15:00-FLR-001",
+    "beginTime": "2021-07-09T17:15Z",
+    "peakTime": "2021-07-09T17:25Z",
+    "endTime": "2021-07-09T17:30Z",
+    "classType": "C4.7",
+    "sourceLocation": "N27W98",
+    "activeRegionNum": 12840,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17249/-1"
+   },
+   {
+    "id": "2021-07-10T01:56:00-FLR-001",
+    "beginTime": "2021-07-10T01:56Z",
+    "peakTime": "2021-07-10T02:06Z",
+    "endTime": "2021-07-10T02:10Z",
+    "classType": "B2.9",
+    "sourceLocation": "N27W104",
+    "activeRegionNum": 12840,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17256/-1"
+   },
+   {
+    "id": "2021-07-10T10:11:00-FLR-001",
+    "beginTime": "2021-07-10T10:11Z",
+    "peakTime": "2021-07-10T10:26Z",
+    "endTime": "2021-07-10T10:40Z",
+    "classType": "B1.6",
+    "sourceLocation": "N27W108",
+    "activeRegionNum": 12840,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/17262/-1"
+   }
+  ],
+  "SEP": [
+   {
+    "id": "2021-07-09T18:05:00-SEP-001",
+    "eventTime": "2021-07-09T18:05Z",
+    "instruments": [
+     "MODEL: REleASE:SOHO/EPHIN 15.8-39.8 MeV"
+    ],
+    "linkedEvents": [
+     "2021-07-09T17:15:00-FLR-001",
+     "2021-07-09T17:36:00-CME-001"
+    ],
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/17241/-1"
+   }
+  ],
+  "CME": [
+   {
+    "id": "2021-07-01T03:36:00-CME-001",
+    "startTime": "2021-07-01T03:36Z",
+    "sourceLocation": "",
+    "activeRegionNum": null,
+    "note": "This faint CME is likely associated with an eruption observed off of the eastern limb of the Earth-facing disk starting as early as 2021-07-01T01:15Z as seen in SDO AIA 171.",
+    "speedKmS": 401,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17184/-1"
+   },
+   {
+    "id": "2021-07-01T22:36:00-CME-001",
+    "startTime": "2021-07-01T22:36Z",
+    "sourceLocation": "",
+    "activeRegionNum": null,
+    "note": "NE in SOHO LASCO/C2 and later in SOHO LASCO/C3 and STEREO A COR2, superposed with streamer blowout.  May be associated with opening field lines visible beyond the E limb in SDO AIA 171, starting around 2021-07-01T21:30Z.",
+    "speedKmS": 291,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17191/-1"
+   },
+   {
+    "id": "2021-07-02T15:36:00-CME-001",
+    "startTime": "2021-07-02T15:36Z",
+    "sourceLocation": "",
+    "activeRegionNum": null,
+    "note": "Visible in W of SOHO LASCO/C2 beginning 2021-07-02T15:36Z.  May be associated with filament eruption starting around 2021-07-02T14:30Z, visible over the NW limb in SDO AIA 304/171.",
+    "speedKmS": 485,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17195/-1"
+   },
+   {
+    "id": "2021-07-03T03:48:00-CME-001",
+    "startTime": "2021-07-03T03:48Z",
+    "sourceLocation": "N23W75",
+    "activeRegionNum": 12838,
+    "note": "Visible W in SOHO LASCO C2/C3 beginning at 2021-07-03T03:48Z. Associated with eruption from AR 12838; opening/rising field lines visible in SDO AIA 171/193 beginning 2021-07-03T02:24Z, material outflow visible in SDO AIA 171 beginning 2021-07-03T02:30Z, also associated with C5.7 flare from AR 12838 near N23W75 beginning 02:14Z, peaking 02:31Z.",
+    "speedKmS": 447,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17198/-1"
+   },
+   {
+    "id": "2021-07-03T08:00:00-CME-001",
+    "startTime": "2021-07-03T08:00Z",
+    "sourceLocation": "N23W78",
+    "activeRegionNum": 12838,
+    "note": "Visible W in SOHO LASCO C2/C3 beginning at 2021-07-03T10:42Z following data gap, CME start estimated as 2021-07-03T08:30Z.  Associated with eruption from AR 12838, near N23W78, visible as opening/rising field lines in SDO AIA 171/193 beginning 2021-07-03T07:19Z, also associated with M2.7 flare from AR 12838 near N23W78 beginning 07:04Z, peaking 07:17Z.",
+    "speedKmS": 394,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17193/-1"
+   },
+   {
+    "id": "2021-07-03T14:48:00-CME-001",
+    "startTime": "2021-07-03T14:48Z",
+    "sourceLocation": "N23W80",
+    "activeRegionNum": 12838,
+    "note": "Visible in W of SOHO LASCO/C2 beginning 2021-07-03T14:48Z, later in SOHO LASCO/C3 and STEREO A COR2.  Associated with eruption visible beginning 2021-07-03T14:28Z in SDO AIA 193/171/304 and X1.5 flare from AR 12838.",
+    "speedKmS": 309,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17206/-1"
+   },
+   {
+    "id": "2021-07-03T17:36:00-CME-001",
+    "startTime": "2021-07-03T17:36Z",
+    "sourceLocation": "N23W82",
+    "activeRegionNum": 12838,
+    "note": "Faintly visible in SOHO LASCO/C2 beginning 2021-07-03T17:36Z, in SOHO LASCO/C3 beginning 2021-07-03T20:30Z, small feature just north of the outflow trailing the larger 2021-07-03T14:48Z CME.",
+    "speedKmS": 213,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17212/-1"
+   },
+   {
+    "id": "2021-07-04T06:00:00-CME-001",
+    "startTime": "2021-07-04T06:00Z",
+    "sourceLocation": "N22W88",
+    "activeRegionNum": 12838,
+    "note": "Visible in west of SOHO LASCO/C2 beginning 2021-07-04T06:00Z, visible in west of STEREO A COR2 beginning 2021-07-04T09:23Z (following data gap).  Associated with eruption visible in SDO AIA 171/193/304 beginning 2021-07-04T05:04Z.",
+    "speedKmS": 230,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17214/-1"
+   },
+   {
+    "id": "2021-07-04T22:23:00-CME-001",
+    "startTime": "2021-07-04T22:23Z",
+    "sourceLocation": "",
+    "activeRegionNum": null,
+    "note": "Faintly visible in STEREO A COR2 imagery, not seen in SOHO LASCO coronagraph data.  May be associated with rising field lines above the unnumbered Active Region in the STEREO A northeastern limb beginning 2021-07-04T21:35Z.",
+    "speedKmS": 362,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17217/-1"
+   },
+   {
+    "id": "2021-07-05T17:53:00-CME-001",
+    "startTime": "2021-07-05T17:53Z",
+    "sourceLocation": "N23W110",
+    "activeRegionNum": 12838,
+    "note": "Associated with eruption seen on/behind the NW limb in SDO AIA 171 beginning 2021-07-05T16:39Z, may be associated with B5.3 flare from AR 2838 at 2021-07-05T16:50Z.",
+    "speedKmS": 535,
+    "type": "C",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17222/-1"
+   },
+   {
+    "id": "2021-07-06T00:12:00-CME-001",
+    "startTime": "2021-07-06T00:12Z",
+    "sourceLocation": "",
+    "activeRegionNum": null,
+    "note": "The source appears to be an eruption from the plague region to the east of Active Region 12838. The eruption is visible in SDO/AIA 193, 171, and 211 beginning at 2021-07-05T22:51Z starting with moving and opening field lines off of the NW limb of the Earth-facing disk, followed by a post-eruption arcade around 2021-07-06T00:42Z and a long duration B5.7 class flare that peaked at 2021-07-06T00:35Z.",
+    "speedKmS": 334,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17225/-1"
+   },
+   {
+    "id": "2021-07-07T15:36:00-CME-001",
+    "startTime": "2021-07-07T15:36Z",
+    "sourceLocation": "S22W48",
+    "activeRegionNum": null,
+    "note": "The source of this CME appears to be from a plague region near S22W48, indicated by rising loops starting at 2021-07-07T14:00Z as seen in SDO/AIA 193 and 171. This CME's leading edge is to the southwest of the Earth-facing disk and is quickly overshadowed by the 2021-07-07T16:24Z CME that erupts after it.",
+    "speedKmS": 148,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17235/-1"
+   },
+   {
+    "id": "2021-07-07T16:24:00-CME-001",
+    "startTime": "2021-07-07T16:24Z",
+    "sourceLocation": "N17W50",
+    "activeRegionNum": 12837,
+    "note": "The source of this CME is an eruption from Active Region 12837 and is associated with a B7.1 class flare. The eruption is visible in SDO/AIA 193, 171, and STEREO-A EUVI 195 starting at 2021-07-07T15:15Z featuring opening field lines, brightening, a flare, dimming, and a post-eruption arcade. The CME is the more Northwestern leading edge and overlaps the preceding 2021-07-07T15:36Z CME.",
+    "speedKmS": 328,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17237/-1"
+   },
+   {
+    "id": "2021-07-08T21:12:00-CME-001",
+    "startTime": "2021-07-08T21:12Z",
+    "sourceLocation": "",
+    "activeRegionNum": null,
+    "note": "Potential CME source might be an insignificant eruption N from AR 2844 around E45S30 after 2021-07-18T19:00Z.",
+    "speedKmS": null,
+    "type": null,
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17336/-1"
+   },
+   {
+    "id": "2021-07-09T08:12:00-CME-001",
+    "startTime": "2021-07-09T08:12Z",
+    "sourceLocation": "N27W95",
+    "activeRegionNum": 12840,
+    "note": "Field line movement and an EUV wave are visible to the NW in SDO/AIA 193 starting at 2021-07-09T07:34Z. The EUV wave appears to last until ~08:31Z as it propagates southward on the limb. This eruption is associated with a C6.0 class flare from Active Region 12840 that peaked at 2021-07-09T07:55Z.",
+    "speedKmS": 310,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17244/-1"
+   },
+   {
+    "id": "2021-07-09T11:12:00-CME-001",
+    "startTime": "2021-07-09T11:12Z",
+    "sourceLocation": "N27W97",
+    "activeRegionNum": 12840,
+    "note": "An eruption associated with a C7.0 class flare is visible on the NW limb of SDO/AIA 193. This eruption displays opening/moving field lines along the limb and an EUV wave that propagates southward along the limb. The C7.0 class flare peaked at 2021-07-09T10:50Z. This CME has a slanted front where the top half is further forward than the bottom half.",
+    "speedKmS": 347,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17246/-1"
+   },
+   {
+    "id": "2021-07-09T17:36:00-CME-001",
+    "startTime": "2021-07-09T17:36Z",
+    "sourceLocation": "N27W98",
+    "activeRegionNum": 12840,
+    "note": "The source of this CME is a C4.7 class flare from Active Region 12840. The eruption shows moving/opening field lines followed by an EUV wave that propagates south and east.",
+    "speedKmS": 525,
+    "type": "C",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17250/-1"
+   },
+   {
+    "id": "2021-07-10T03:12:00-CME-001",
+    "startTime": "2021-07-10T03:12Z",
+    "sourceLocation": "N27W104",
+    "activeRegionNum": 12840,
+    "note": "Associated with field line opening over NW limb of SDO AIA 171/193 beginning 2021-07-10T02:12Z and preceded by B2.9 flare beginning 2021-07-10T01:56Z.",
+    "speedKmS": 502,
+    "type": "C",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17257/-1"
+   },
+   {
+    "id": "2021-07-10T12:00:00-CME-001",
+    "startTime": "2021-07-10T12:00Z",
+    "sourceLocation": "N27W108",
+    "activeRegionNum": 12840,
+    "note": "Associated with eruption from AR 12840 visible in west of SDO AIA 171/193 beginning 2021-07-10T10:15Z and B1.6 flare beginning 2021-07-10T10:11Z.",
+    "speedKmS": 323,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17263/-1"
+   },
+   {
+    "id": "2021-07-10T13:36:00-CME-001",
+    "startTime": "2021-07-10T13:36Z",
+    "sourceLocation": "S30E25",
+    "activeRegionNum": null,
+    "note": "May be associated with a filament eruption near S30E25, faintly visible in SDO AIA 304 beginning 2021-07-10T09:21Z and in STEREO A EUVI 304 between 2021-07-10T08:15Z and 2021-07-10T10:15Z.",
+    "speedKmS": 375,
+    "type": "S",
+    "earthDirected": true,
+    "estimatedEarthArrival": "2021-07-14T06:00Z",
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17267/-1"
+   },
+   {
+    "id": "2021-07-10T17:38:00-CME-001",
+    "startTime": "2021-07-10T17:38Z",
+    "sourceLocation": "",
+    "activeRegionNum": null,
+    "note": "",
+    "speedKmS": 643,
+    "type": "C",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17271/-1"
+   },
+   {
+    "id": "2021-07-11T06:24:00-CME-001",
+    "startTime": "2021-07-11T06:24Z",
+    "sourceLocation": "",
+    "activeRegionNum": null,
+    "note": "Visible in SOHO LASCO/C2 beginning 2021-07-11T06:24Z, later in SOHO LASCO/C3 and STEREO A COR2.  No definitive source found, and it appears to be a backsided event.",
+    "speedKmS": 461,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17286/-1"
+   },
+   {
+    "id": "2021-07-11T17:23:00-CME-001",
+    "startTime": "2021-07-11T17:23Z",
+    "sourceLocation": "",
+    "activeRegionNum": null,
+    "note": "Source has not been found, it looks to be behind the East limb in STEREO A",
+    "speedKmS": 646,
+    "type": "C",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/17275/-1"
+   }
+  ],
+  "GST": []
+ }
+}

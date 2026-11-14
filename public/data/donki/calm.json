@@ -1,0 +1,66 @@
+{
+ "id": "calm",
+ "label": "Calm Sun",
+ "why": "Solar minimum between cycles 24 and 25. DONKI lists no flares in this window.",
+ "reference": null,
+ "startDate": "2019-12-01",
+ "endDate": "2019-12-11",
+ "fetchedAt": "2026-11-14T10:16:08.825Z",
+ "fetchedVia": [
+  "ccmc.gsfc.nasa.gov"
+ ],
+ "source": "NASA DONKI (Space Weather Database Of Notifications, Knowledge, Information)",
+ "sourceUrl": "https://ccmc.gsfc.nasa.gov/tools/DONKI/",
+ "note": "Cached copy. Fields trimmed for size; each record links to its full DONKI page.",
+ "counts": {
+  "flaresM": 0,
+  "flaresX": 0,
+  "sep": 0,
+  "cme": 3,
+  "cmeEarthDirected": 0,
+  "gst": 0
+ },
+ "events": {
+  "FLR": [],
+  "SEP": [],
+  "CME": [
+   {
+    "id": "2019-12-03T20:00:00-CME-001",
+    "startTime": "2019-12-03T20:00Z",
+    "sourceLocation": "",
+    "activeRegionNum": null,
+    "note": "",
+    "speedKmS": 259,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/15202/-1"
+   },
+   {
+    "id": "2019-12-06T06:36:00-CME-001",
+    "startTime": "2019-12-06T06:36Z",
+    "sourceLocation": "",
+    "activeRegionNum": null,
+    "note": "This CME was faint, but it looked almost as though it had two fronts. No clear source was identified.",
+    "speedKmS": 356,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/15206/-1"
+   },
+   {
+    "id": "2019-12-11T23:36:00-CME-001",
+    "startTime": "2019-12-11T23:36Z",
+    "sourceLocation": "",
+    "activeRegionNum": null,
+    "note": "This was a faint and narrow CME. It was modeled just to make sure that it would not affect PSP.",
+    "speedKmS": 211,
+    "type": "S",
+    "earthDirected": false,
+    "estimatedEarthArrival": null,
+    "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/CME/15218/-1"
+   }
+  ],
+  "GST": []
+ }
+}

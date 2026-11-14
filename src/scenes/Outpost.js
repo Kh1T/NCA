@@ -1,0 +1,263 @@
+import Phaser from "phaser";
+import { GROUND_Y, HEIGHT, PALETTE, TEXT, WIDTH, textStyle } from "../constants.js";
+import { ITEMS } from "../sim/buildings.js";
+import { drawShip, drawSite } from "../ui/art.js";
+import { drawEarth, drawGround, drawHills, drawStars } from "../ui/backdrop.js";
+import { sfx } from "../ui/sfx.js";
+
+export const WORLD_W = 1500;
+export const SHIP_X = 120;
+export const SITE_X = {
+  solar: 300, water: 450, air: 600, oxygen: 750, greenhouse: 900, shield: 1050, antenna: 1200, rover: 1350,
+};
+const ROCKS = [
+  { x: 375, w: 18, h: 8 }, { x: 525, w: 14, h: 6 }, { x: 675, w: 22, h: 11 }, { x: 825, w: 16, h: 7 },
+  { x: 975, w: 18, h: 10 }, { x: 1125, w: 14, h: 7 }, { x: 1275, w: 20, h: 10 },
+];
+const REACH = 38;
+const SPEED = 100;
+const JUMP = -150;
+
+/**
+ * The base view for Phases 1 and 2: a side-scrolling lunar surface. The
+ * astronaut walks and jumps between the ship and the building sites.
+ * The HUD and all panels live in the OutpostUi scene on top of this one.
+ */
+export class Outpost extends Phaser.Scene {
+  constructor() {
+    super("Outpost");
+  }
+
+  get state() {
+    return this.registry.get("state");
+  }
+
+  create() {
+    this.frozen = false;
+    this.walkTarget = null;
+    this.focusId = null;
+
+    this.physics.world.setBounds(0, 0, WORLD_W, HEIGHT);
+    this.cameras.main.setBounds(0, 0, WORLD_W, HEIGHT);
+    drawStars(this, { seed: "outpost-sky", maxY: GROUND_Y - 20, scroll: 0, count: 90 });
+    drawEarth(this, 520, 84);
+    drawHills(this, { width: WORLD_W, seed: "outpost-hills", scroll: 0.5 });
+    drawGround(this, { width: WORLD_W, seed: "outpost-ground" });
+
+    // Solid ground and a few rocks to hop over.
+    this.solids = this.physics.add.staticGroup();
+    const ground = this.add.rectangle(WORLD_W / 2, GROUND_Y + 30, WORLD_W, 60, 0x000000, 0);
+    this.solids.add(ground);
+    for (const rock of ROCKS) {
+      const block = this.add.rectangle(rock.x, GROUND_Y - rock.h / 2, rock.w, rock.h, PALETTE.regolithDark);
+      block.setStrokeStyle(1, PALETTE.regolithLight);
+      this.solids.add(block);
+    }
+
+    // Ship and two crewmates who stay near it.
+    const ship = this.add.graphics();
+    drawShip(ship, SHIP_X, GROUND_Y);
+    this.add.text(SHIP_X, GROUND_Y + 4, "SHIP", textStyle(8, "#23262d")).setOrigin(0.5, 0);
+    if (this.textures.exists("astro-walk-3")) {
+      this.add.image(SHIP_X - 52, GROUND_Y - 22, "astro-walk-3").setFlipX(true);
+      this.add.image(SHIP_X - 86, GROUND_Y - 22, "astro-walk-6").setFlipX(true);
+    }
+
+    // Building sites.
+    this.sites = {};
+    for (const [id, x] of Object.entries(SITE_X)) {
+      const g = this.add.graphics();
+      const name = this.add.text(x, GROUND_Y + 4, ITEMS[id].short, textStyle(8, "#23262d")).setOrigin(0.5, 0);
+      const status = this.add.text(x, GROUND_Y + 13, "", textStyle(8, "#23262d")).setOrigin(0.5, 0);
+      const hit = this.add.rectangle(x, GROUND_Y - 24, 52, 52, 0x000000, 0.001).setInteractive({ useHandCursor: true });
+      hit.on("pointerdown", () => this.walkTo(x, id));
+      this.sites[id] = { g, name, status, x };
+    }
+    const shipHit = this.add.rectangle(SHIP_X, GROUND_Y - 40, 60, 80, 0x000000, 0.001).setInteractive({ useHandCursor: true });
+    shipHit.on("pointerdown", () => this.walkTo(SHIP_X, "ship"));
+    this.marker = this.add.graphics().setDepth(5);
+    this.tweens.add({ targets: this.marker, alpha: 0.25, duration: 450, yoyo: true, repeat: -1 });
+
+    // The astronaut.
+    const startX = this.registry.get("outpostX") ?? SHIP_X + 30;
+    this.player = this.physics.add.sprite(startX, GROUND_Y - 30, "astro-walk-1").setDepth(10);
+    this.player.body.setSize(14, 32).setOffset(17, 14);
+    this.player.setCollideWorldBounds(true);
+    this.physics.add.collider(this.player, this.solids);
+    this.cameras.main.startFollow(this.player, true, 0.12, 0.12, 0, 40);
+
+    this.prompt = this.add.text(0, 0, "", textStyle(8, TEXT.accent, { backgroundColor: "#05060a", padding: { x: 3, y: 2 } })).setOrigin(0.5, 1).setDepth(20);
+    this.prompt.setInteractive({ useHandCursor: true });
+    this.prompt.on("pointerdown", () => this.interact());
+
+    // Day/night shading for the time-lapse and the long shadow.
+    this.shade = this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x02030a, 0).setOrigin(0).setScrollFactor(0).setDepth(40);
+    this.dayText = this.add.text(WIDTH / 2, 150, "", textStyle(24, TEXT.white)).setOrigin(0.5).setScrollFactor(0).setDepth(41).setAlpha(0);
+
+    this.keys = this.input.keyboard.addKeys({
+      left: "LEFT", right: "RIGHT", up: "UP", a: "A", d: "D", w: "W", space: "SPACE", e: "E", enter: "ENTER",
+    });
+    // Tap or click the ground to walk there.
+    this.input.on("pointerdown", (pointer, over) => {
+      if (over.length === 0 && pointer.y > 62 && pointer.y < 322) this.walkTo(pointer.worldX, null);
+    });
+    this.events.once("shutdown", () => this.registry.set("outpostX", this.player.x));
+
+    this.scene.launch("OutpostUi");
+    this.scene.bringToTop("OutpostUi");
+    this.refresh();
+  }
+
+  get ui() {
+    return this.scene.get("OutpostUi");
+  }
+
+  /** Redraw every site from the current state. */
+  refresh() {
+    const state = this.state;
+    for (const [id, site] of Object.entries(this.sites)) {
+      const building = state.buildings[id];
+      drawSite(site.g, id, site.x, GROUND_Y, building, ITEMS[id].buildDays);
+      let label = "";
+      if (!building.packed) label = "NO PLAN";
+      else if (building.status === "idle") label = id === "rover" && state.phase < 2 ? "LOCKED" : "BUILD?";
+      else if (building.status === "building") label = `${Math.ceil(building.daysLeft)} DAY${Math.ceil(building.daysLeft) > 1 ? "S" : ""}`;
+      else if (building.health < 100) label = "BROKEN";
+      else if (!building.on) label = "OFF";
+      else label = "OK";
+      site.status.setText(label).setColor(label === "BROKEN" ? "#8f1d1d" : label === "OK" ? "#1d5c33" : "#3a3d44");
+    }
+    const night = state.effects.nightDaysLeft > 0;
+    this.baseShade = night ? 0.42 : 0;
+    if (!this.lapsing) this.shade.setAlpha(this.baseShade);
+    this.drawMarker();
+  }
+
+  /** Pulse an arrow over the thing the guide line is talking about. */
+  setFocus(id) {
+    this.focusId = id;
+    this.drawMarker();
+  }
+
+  drawMarker() {
+    this.marker.clear();
+    const x = this.focusId === "ship" ? SHIP_X : SITE_X[this.focusId];
+    if (x === undefined) return;
+    const y = GROUND_Y - (this.focusId === "ship" ? 92 : 56);
+    this.marker.fillStyle(PALETTE.accent, 1);
+    this.marker.fillTriangle(x - 7, y, x + 7, y, x, y + 9);
+    this.marker.fillRect(x - 2, y - 8, 4, 8);
+  }
+
+  walkTo(x, id) {
+    if (this.frozen) return;
+    this.walkTarget = { x: Phaser.Math.Clamp(x, 20, WORLD_W - 20), id };
+  }
+
+  /** What the astronaut is standing next to: 'ship', a site id, or null. */
+  nearest() {
+    let best = null;
+    let bestDistance = REACH;
+    const check = (id, x) => {
+      const distance = Math.abs(this.player.x - x);
+      if (distance < bestDistance) {
+        best = id;
+        bestDistance = distance;
+      }
+    };
+    check("ship", SHIP_X);
+    for (const [id, x] of Object.entries(SITE_X)) check(id, x);
+    return best;
+  }
+
+  interact() {
+    if (this.frozen) return;
+    const near = this.nearest();
+    if (!near) return;
+    this.walkTarget = null;
+    sfx("click");
+    if (near === "ship") this.ui.openPlan();
+    else this.ui.openSite(near);
+  }
+
+  /** Night passes over the base while the day's work happens. */
+  playDay(nextDay, onDone) {
+    this.lapsing = true;
+    sfx("day");
+    this.dayText.setText(`DAY ${nextDay - 1} ...`);
+    this.tweens.add({ targets: this.dayText, alpha: 1, duration: 300, yoyo: true, hold: 1100 });
+    this.tweens.add({
+      targets: this.shade,
+      alpha: 0.72,
+      duration: 850,
+      yoyo: true,
+      ease: "Sine.easeInOut",
+      onComplete: () => {
+        this.lapsing = false;
+        this.shade.setAlpha(this.baseShade ?? 0);
+        onDone();
+      },
+    });
+  }
+
+  update() {
+    const body = this.player.body;
+    const k = this.keys;
+    const onFloor = body.blocked.down || body.touching.down;
+    if (this.frozen) {
+      this.player.setVelocityX(0);
+      this.player.anims.stop();
+      this.prompt.setVisible(false);
+      // Swallow key presses made while a panel was open, so they do not fire later.
+      for (const key of [k.e, k.enter, k.up, k.w, k.space]) Phaser.Input.Keyboard.JustDown(key);
+      this.wasFrozen = true;
+      return;
+    }
+    if (this.wasFrozen) {
+      // The key that closed a panel must not also act in the world.
+      for (const key of [k.e, k.enter, k.up, k.w, k.space]) Phaser.Input.Keyboard.JustDown(key);
+      this.wasFrozen = false;
+    }
+
+    let direction = 0;
+    if (k.left.isDown || k.a.isDown) direction = -1;
+    else if (k.right.isDown || k.d.isDown) direction = 1;
+    let jump = Phaser.Input.Keyboard.JustDown(k.up) || Phaser.Input.Keyboard.JustDown(k.w) || Phaser.Input.Keyboard.JustDown(k.space);
+
+    if (direction !== 0 || jump) {
+      this.walkTarget = null;
+    } else if (this.walkTarget) {
+      const dx = this.walkTarget.x - this.player.x;
+      if (Math.abs(dx) < 6) {
+        const { id } = this.walkTarget;
+        this.walkTarget = null;
+        if (id && this.nearest() === id) this.interact();
+      } else {
+        direction = Math.sign(dx);
+        // Hop over a rock that is in the way.
+        if (onFloor && (body.blocked.left || body.blocked.right)) jump = true;
+      }
+    }
+
+    this.player.setVelocityX(direction * SPEED);
+    if (direction !== 0) {
+      this.player.setFlipX(direction < 0);
+      this.player.anims.play("astro-walk", true);
+    } else {
+      this.player.anims.stop();
+    }
+    if (jump && onFloor) {
+      this.player.setVelocityY(JUMP);
+      sfx("jump");
+    }
+
+    const near = this.nearest();
+    if (near) {
+      const label = near === "ship" ? "SHIP: PLAN THE DAY" : ITEMS[near].name.toUpperCase();
+      this.prompt.setText(`E: ${label}`).setPosition(this.player.x, this.player.y - 30).setVisible(true);
+      if (Phaser.Input.Keyboard.JustDown(k.e) || Phaser.Input.Keyboard.JustDown(k.enter)) this.interact();
+    } else {
+      this.prompt.setVisible(false);
+    }
+  }
+}

@@ -2,7 +2,7 @@
   "name": "astropeer",
   "version": "0.1.0",
   "private": true,
-  "description": "Astropeer, a Phaser arcade game",
+  "description": "OUTPOST: Dark Side, a Moon outpost game for NASA Space Apps (Phaser + Vite)",
   "type": "module",
   "scripts": {
     "predev": "npm run sprites",
@@ -10,12 +10,17 @@
     "prebuild": "npm run sprites",
     "build": "vite build",
     "preview": "vite preview",
-    "sprites": "node scripts/generate-sprites.mjs"
+    "sprites": "node scripts/generate-sprites.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "fetch-nasa": "node scripts/fetch-nasa.js"
   },
   "dependencies": {
     "phaser": "^4.2.1"
   },
   "devDependencies": {
-    "vite": "^8.3.8"
+    "@fontsource/press-start-2p": "^5.3.0",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
   }
 }

@@ -1,0 +1,215 @@
+{
+  "donki": {
+    "name": "NASA DONKI space weather database",
+    "provider": "NASA Goddard, Community Coordinated Modeling Center (CCMC)",
+    "homepage": "https://ccmc.gsfc.nasa.gov/tools/DONKI/",
+    "api": [
+      "https://api.nasa.gov/DONKI/{FLR,SEP,CME,GST}",
+      "https://ccmc.gsfc.nasa.gov/DONKI-API/get/{FLR,SEP,CME,GST}"
+    ],
+    "usedFor": "Solar flare, particle storm and solar cloud alerts, and the difficulty stars for each mission date.",
+    "fetchedAt": "2026-11-14T10:16:49.047Z",
+    "datasets": [
+      {
+        "file": "data/donki/calm.json",
+        "label": "Calm Sun",
+        "startDate": "2019-12-01",
+        "endDate": "2019-12-11",
+        "why": "Solar minimum between cycles 24 and 25. DONKI lists no flares in this window.",
+        "reference": null,
+        "counts": {
+          "flaresM": 0,
+          "flaresX": 0,
+          "sep": 0,
+          "cme": 3,
+          "cmeEarthDirected": 0,
+          "gst": 0
+        }
+      },
+      {
+        "file": "data/donki/busy.json",
+        "label": "Busy Sun",
+        "startDate": "2021-07-01",
+        "endDate": "2021-07-11",
+        "why": "A moderately active week that includes the X1.5 flare of 3 July 2021.",
+        "reference": null,
+        "counts": {
+          "flaresM": 3,
+          "flaresX": 1,
+          "sep": 1,
+          "cme": 23,
+          "cmeEarthDirected": 1,
+          "gst": 0
+        }
+      },
+      {
+        "file": "data/donki/storm.json",
+        "label": "Solar Storm!",
+        "startDate": "2024-05-08",
+        "endDate": "2024-05-18",
+        "why": "The May 2024 'Gannon' storm: many X-class flares and a G5 geomagnetic storm.",
+        "reference": "https://science.nasa.gov/science-research/heliophysics/how-nasa-tracked-the-most-intense-solar-storm-in-decades/",
+        "counts": {
+          "flaresM": 85,
+          "flaresX": 14,
+          "sep": 14,
+          "cme": 56,
+          "cmeEarthDirected": 15,
+          "gst": 4
+        }
+      },
+      {
+        "file": "data/donki/recent.json",
+        "label": "This month",
+        "startDate": "2026-10-15",
+        "endDate": "2026-11-14",
+        "why": "The 30 days before this cache was made. Shown in the game as cached, never as live.",
+        "reference": null,
+        "counts": {
+          "flaresM": 10,
+          "flaresX": 0,
+          "sep": 0,
+          "cme": 86,
+          "cmeEarthDirected": 3,
+          "gst": 1
+        }
+      },
+      {
+        "file": "data/donki/archive.json",
+        "label": "Random real date",
+        "startDate": "2023-01-01",
+        "endDate": "2023-12-31",
+        "why": "A full year near solar maximum, so a random start date gives a different real week each time.",
+        "reference": null,
+        "counts": {
+          "flaresM": 369,
+          "flaresX": 13,
+          "sep": 75,
+          "cme": 137,
+          "cmeEarthDirected": 137,
+          "gst": 16
+        }
+      }
+    ]
+  },
+  "images": {
+    "name": "NASA Image and Video Library",
+    "homepage": "https://images.nasa.gov/",
+    "api": [
+      "https://images-api.nasa.gov/search"
+    ],
+    "usedFor": "The real photo shown after each crater picture in the photo race.",
+    "fetchedAt": "2026-11-14T10:16:49.047Z",
+    "items": [
+      {
+        "name": "Orientale Basin",
+        "nasaId": "PIA13225",
+        "credit": "NASA/GSFC/Arizona State University",
+        "mission": "Lunar Reconnaissance Orbiter (LROC)",
+        "link": "https://images.nasa.gov/details/PIA13225"
+      },
+      {
+        "name": "Vavilov Crater",
+        "nasaId": "art002e009282",
+        "credit": "NASA",
+        "mission": "Artemis II",
+        "link": "https://images.nasa.gov/details/art002e009282"
+      },
+      {
+        "name": "Hertzsprung Basin",
+        "nasaId": "art002e021296",
+        "credit": "NASA",
+        "mission": "Artemis II",
+        "link": "https://images.nasa.gov/details/art002e021296"
+      },
+      {
+        "name": "Mare Moscoviense",
+        "nasaId": "PIA12939",
+        "credit": "NASA/GSFC/Arizona State University",
+        "mission": "Lunar Reconnaissance Orbiter (LROC)",
+        "link": "https://images.nasa.gov/details/PIA12939"
+      },
+      {
+        "name": "Tsiolkovskiy Crater",
+        "nasaId": "PIA13089",
+        "credit": "NASA/GSFC/Arizona State University",
+        "mission": "Lunar Reconnaissance Orbiter (LROC)",
+        "link": "https://images.nasa.gov/details/PIA13089"
+      }
+    ]
+  },
+  "osdr": {
+    "name": "NASA Open Science Data Repository (OSDR)",
+    "homepage": "https://osdr.nasa.gov/bio/repo/",
+    "api": [
+      "https://osdr.nasa.gov/osdr/data/search"
+    ],
+    "usedFor": "The science fact card in the debrief, matched to how the mission was played.",
+    "fetchedAt": "2026-11-14T10:16:49.045Z",
+    "items": [
+      {
+        "topic": "radiation",
+        "accession": "OSD-210",
+        "title": "Approaches for Surveying Cosmic Radiation Damage in Large Populations of Arabidopsis thaliana Seeds- an Antarctic Example",
+        "link": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-210"
+      },
+      {
+        "topic": "bone",
+        "accession": "OSD-342",
+        "title": "Targeting myostatin/activin A protects against skeletal muscle and bone loss during spaceflight [plasma proteomics]",
+        "link": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-342"
+      },
+      {
+        "topic": "muscle",
+        "accession": "OSD-225",
+        "title": "Expression profiling of soleus muscle under the effect of simulated spaceflight",
+        "link": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-225"
+      },
+      {
+        "topic": "plants",
+        "accession": "OSD-615",
+        "title": "Glycome profiling and immunohistochemistry uncover changes in cell walls of Arabidopsis thaliana roots during spaceflight: Advanced Plant EXperiment (APEX) 03-1 Raw Dataset",
+        "link": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-615"
+      },
+      {
+        "topic": "immune",
+        "accession": "OSD-943",
+        "title": "Longitudinal transcriptomic and epigenetic analysis in astronauts reveals dynamic immune response to spaceflight [DNA methylation]",
+        "link": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-943"
+      },
+      {
+        "topic": "microbes",
+        "accession": "OSD-400",
+        "title": "Draft Genomes of Fungi Isolated from the International Space Station during the Microbial Tracking-2 Experiment",
+        "link": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-400"
+      }
+    ]
+  },
+  "staticFacts": [
+    {
+      "fact": "Moon surface dose: about 1.37 mSv per day",
+      "source": "Zhang et al. 2020, Science Advances (Chang'e-4, Chinese-German, not NASA)",
+      "link": "https://doi.org/10.1126/sciadv.aaz1334"
+    },
+    {
+      "fact": "NASA career limit 600 mSv; 250 mSv for one particle storm",
+      "source": "NASA-STD-3001 radiation brief",
+      "link": "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf"
+    },
+    {
+      "fact": "A chest X-ray is about 0.1 mSv",
+      "source": "NASA NTRS dose comparisons",
+      "link": "https://ntrs.nasa.gov/api/citations/20250006168/downloads/ASCEND%20Simonsen%20draft%201.pdf"
+    },
+    {
+      "fact": "May 2024 'Gannon' storm dates",
+      "source": "NASA Science and CCMC",
+      "link": "https://science.nasa.gov/science-research/heliophysics/how-nasa-tracked-the-most-intense-solar-storm-in-decades/"
+    },
+    {
+      "fact": "Greenhouse rules: light, water, time",
+      "source": "Canadian Space Agency food toolkit",
+      "link": "https://www.asc-csa.gc.ca/eng/youth-educators/toolkits/food-production/"
+    }
+  ]
+}
