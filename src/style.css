@@ -665,7 +665,7 @@ a:focus-visible {
 .fact-card p {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.55;
 }
 
@@ -791,7 +791,7 @@ a:focus-visible {
 .resource-head > span:first-child {
   overflow: hidden;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.09em;
   text-overflow: ellipsis;
@@ -830,7 +830,7 @@ a:focus-visible {
 
 .resource-foot {
   color: var(--quiet);
-  font-size: 7px;
+  font-size: 8px;
 }
 
 .resource-foot span:last-child {
@@ -859,7 +859,7 @@ a:focus-visible {
   max-width: 680px;
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.55;
 }
 
@@ -900,7 +900,7 @@ a:focus-visible {
 .choice-intro p {
   margin: 4px 0 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.45;
 }
 
@@ -977,14 +977,14 @@ a:focus-visible {
 }
 
 .choice-content > strong {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .choice-description,
 .choice-warning {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.4;
 }
 
@@ -1005,7 +1005,7 @@ a:focus-visible {
   border: 1px solid var(--line);
   border-radius: 4px;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.06em;
   line-height: 1.2;

@@ -593,7 +593,7 @@ export function createOutpost(root) {
       state.selectedChoiceId = null;
     }
     render();
-    root.querySelector("[data-choice]")?.focus();
+    root.querySelector("[data-choice], [data-action='restart']")?.focus();
   }
 
   function restartMission() {
