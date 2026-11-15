@@ -155,17 +155,17 @@ export function retryHints(state) {
   const cause = state.outcome?.cause;
   const order = state.log.filter((e) => e.type === "build-start").map((e) => e.id);
   const last = order[order.length - 1];
-  if (cause === "air") hints.push("Clean air runs out first. Start the air recycler on Day 1 or 2.");
+  if (cause === "air") hints.push("Clean air runs out first. Build the air recycler early.");
   if (cause === "oxygen") hints.push("Start water first, then oxygen. The oxygen generator needs water.");
   if (cause === "water") hints.push("Start the water extractor on Day 1. Everything depends on it.");
-  if (cause === "food") hints.push("Food takes 2 days to grow. Start the greenhouse early, or pack a food crate.");
-  if (cause === "dose") hints.push("Take shelter when a flare hits. Losing a build day is cheaper than the dose.");
+  if (cause === "food") hints.push("Food takes 2 days to grow. Start the greenhouse early.");
+  if (cause === "dose") hints.push("Hide from flares. A lost build day beats a big dose.");
   if (cause === "timer") hints.push("Warm up in the rover between photos, and head back sooner.");
   if (cause === "time") hints.push("Keep all 3 build slots busy, or pick a longer mission.");
-  if (last === "greenhouse" && cause !== "food") hints.push("You built the greenhouse last. Next time, start it sooner so food arrives in time.");
+  if (last === "greenhouse" && cause !== "food") hints.push("Start the greenhouse sooner, so food arrives in time.");
   if (state.stats.powerShortDays > 0) hints.push("Power ran short. Build the solar array first, or pack a battery.");
-  if (hints.length === 0 && state.science < SCORE.STAR_SCIENCE) hints.push("For more stars, spend spare power on science or use the Explore action.");
-  if (hints.length === 0) hints.push("Try a stormier date or a bigger weather deck for a higher score.");
+  if (hints.length === 0 && state.science < SCORE.STAR_SCIENCE) hints.push("For more stars, power science or pick Explore.");
+  if (hints.length === 0) hints.push("Try a stormier date for a higher score.");
   return hints.slice(0, 3);
 }
 

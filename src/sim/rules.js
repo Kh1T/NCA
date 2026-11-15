@@ -47,11 +47,11 @@ export const C = {
 export const RESOURCES = ["oxygen", "air", "water", "food"];
 export const ALLOC_KEYS = ["life", "greenhouse", "shield", "science"];
 export const ACTIONS = {
-  work: { label: "Build", gain: "Builds move at full speed", cost: "Half the day outside: more radiation" },
-  rest: { label: "Rest", gain: "Less radiation, less air and food used", cost: "Builds move at half speed" },
-  repair: { label: "Repair", gain: "Fixes one broken thing", cost: "1 power and today's action" },
-  explore: { label: "Explore", gain: "+3 science", cost: "1 power and more radiation" },
-  grow: { label: "Grow food", gain: "+50% food planted today", cost: "Extra water and today's action" },
+  work: { label: "Build", icon: "build", gain: [["build", "FAST"]], cost: [["dose", "MORE"]] },
+  rest: { label: "Rest", icon: "crew", gain: [["dose", "LESS"], ["air", "SAVE"]], cost: [["build", "SLOW"]] },
+  repair: { label: "Repair", icon: "wrench", gain: [["wrench", "FIX 1"]], cost: [["power", "-1"]] },
+  explore: { label: "Explore", icon: "camera", gain: [["science", "+3"]], cost: [["power", "-1"], ["dose", "MORE"]] },
+  grow: { label: "Grow", icon: "leaf", gain: [["food", "+50%"]], cost: [["water", "MORE"]] },
 };
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -356,23 +356,23 @@ export function canLaunch(state) {
  */
 export function guideLine(state) {
   const fix = repairTarget(state);
-  if (fix && fix.kind !== "dust") return { text: `Something is broken: fix ${fix.label}.`, focus: fix.id ?? "air" };
+  if (fix && fix.kind !== "dust") return { text: `Something is broken! Fix ${fix.label}.`, focus: fix.id ?? "air" };
   const low = RESOURCES.filter((key) => state[key] <= C.LOW_SUPPLY).sort((a, b) => state[a] - state[b])[0];
   if (low) {
     const names = { oxygen: "Oxygen", air: "Clean air", water: "Water", food: "Food" };
     const maker = { oxygen: "oxygen", air: "air", water: "water", food: "greenhouse" }[low];
     const building = state.buildings[maker];
-    if (building.status === "done" && low === "food") return { text: "Food is running low. Power the greenhouse and use the Grow food action.", focus: low };
-    if (building.status === "done") return { text: `${names[low]} is running low. Give life support more power.`, focus: low };
-    if (building.status === "building") return { text: `${names[low]} is running low. Its building is almost ready.`, focus: low };
-    return { text: `${names[low]} is running low. Build the ${ITEMS[maker].name.toLowerCase()} now.`, focus: low };
+    if (building.status === "done" && low === "food") return { text: "Food is low! Power the greenhouse and grow food.", focus: low };
+    if (building.status === "done") return { text: `${names[low]} is low! Give life support more power.`, focus: low };
+    if (building.status === "building") return { text: `${names[low]} is low! Its building is almost ready.`, focus: low };
+    return { text: `${names[low]} is low! Build the ${ITEMS[maker].name.toLowerCase()}.`, focus: low };
   }
-  if (state.power <= 1 && state.buildings.solar.status !== "done") return { text: "Power is nearly empty. Build the solar array.", focus: "power" };
-  if (fix) return { text: "Dust is blocking sunlight. Repair to clean the panels.", focus: "power" };
-  if (canLaunch(state)) return { text: "The rover is ready! Walk to it and launch the photo mission.", focus: "rover" };
+  if (state.power <= 1 && state.buildings.solar.status !== "done") return { text: "Power is low! Build the solar array.", focus: "power" };
+  if (fix) return { text: "Dust blocks the sun. Repair to clean it.", focus: "power" };
+  if (canLaunch(state)) return { text: "The rover is ready! Walk to it and launch.", focus: "rover" };
   const next = BUILD_ORDER.find((id) => canStartBuild(state, id).ok);
-  if (next) return { text: `A build slot is free. Walk to the ${ITEMS[next].name.toLowerCase()} site and start it.`, focus: next };
-  return { text: "All set for today. Open the PLAN and press RUN DAY.", focus: "plan" };
+  if (next) return { text: `A build slot is free. Build the ${ITEMS[next].name.toLowerCase()}!`, focus: next };
+  return { text: "All set! Plan the day at the ship.", focus: "plan" };
 }
 
 /** A sensible plan for today. Used by the forecast, the tests and the hint button. */

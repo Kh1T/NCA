@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { playMusic } from "../ui/sfx.js";
 import { TEXT } from "../constants.js";
 import { cachedOnText, getCredits, niceDate } from "../data/nasa.js";
 import { drawStars } from "../ui/backdrop.js";
@@ -22,13 +23,14 @@ export class Credits extends Phaser.Scene {
     this.credits = getCredits(this);
     this.page = 0;
     drawStars(this, { seed: "credits" });
+    playMusic("menu");
     const F = (this.frame = new Layer(this, { keys: true }));
-    F.text(8, 8, "SCIENCE SOURCES", { size: 16, color: TEXT.accent });
+    F.text(8, 2, "SCIENCE SOURCES", { size: 32, color: TEXT.accent });
     this.pageText = F.text(632, 12, "", { origin: 1, color: TEXT.muted });
-    F.panel(8, 32, 624, 284);
-    F.button(54, 340, "< BACK", () => this.turn(-1), { w: 84 });
-    const next = F.button(146, 340, "NEXT >", () => this.turn(1), { w: 84, key: "ENTER" });
-    F.button(572, 340, "CLOSE", () => this.scene.start(this.from), { w: 100, key: "ESCAPE" });
+    F.panel(8, 38, 624, 278);
+    F.iconButton(30, 338, "back", () => this.turn(-1), { size: 36 });
+    const next = F.button(110, 338, "NEXT", () => this.turn(1), { w: 110, h: 36, key: "ENTER", icon: "play" });
+    F.button(572, 338, "CLOSE", () => this.scene.start(this.from), { w: 110, h: 36, key: "ESCAPE" });
     this.pages = [() => this.pageWeather(), () => this.pagePhotos(), () => this.pageFacts(), () => this.pageHonesty()];
     this.body = null;
     this.draw();
@@ -58,7 +60,7 @@ export class Credits extends Phaser.Scene {
   pageWeather() {
     const B = this.body;
     const donki = this.credits.donki;
-    B.text(20, 42, "1. SPACE WEATHER: NASA DONKI", { color: TEXT.accent });
+    B.text(20, 44, "1. SPACE WEATHER: NASA DONKI", { color: TEXT.accent });
     if (!donki) {
       B.text(20, 60, "No cached data found. Run: npm run fetch-nasa", { color: TEXT.danger });
       return;
@@ -70,16 +72,16 @@ export class Credits extends Phaser.Scene {
     for (const set of donki.datasets ?? []) {
       const c = set.counts;
       B.text(20, y, `${set.label.toUpperCase()}: ${niceDate(set.startDate)} to ${niceDate(set.endDate)}`, { color: TEXT.white });
-      B.text(20, y + 11, `${c.flaresX} X flares, ${c.flaresM} M flares, ${c.sep} particle storm records, ${c.cmeEarthDirected} Earth-directed clouds`, { color: TEXT.muted, wrap: 600 });
-      y += 30;
+      B.text(20, y + 16, `${c.flaresX} X flares, ${c.flaresM} M flares, ${c.sep} particle storm records, ${c.cmeEarthDirected} Earth-directed clouds`, { color: TEXT.muted, wrap: 600 });
+      y += 36;
     }
-    this.link(20, 296, "OPEN: ccmc.gsfc.nasa.gov/tools/DONKI", donki.homepage);
+    this.link(20, 294, "OPEN: ccmc.gsfc.nasa.gov/tools/DONKI", donki.homepage);
   }
 
   pagePhotos() {
     const B = this.body;
     const images = this.credits.images;
-    B.text(20, 42, "2. CRATER PHOTOS: NASA IMAGE AND VIDEO LIBRARY", { color: TEXT.accent });
+    B.text(20, 44, "2. CRATER PHOTOS: NASA IMAGE AND VIDEO LIBRARY", { color: TEXT.accent });
     if (!images) return;
     const why = B.text(20, 58, `WHY: ${images.usedFor}`, { wrap: 600 });
     let y = why.y + why.height + 4;
@@ -87,8 +89,8 @@ export class Credits extends Phaser.Scene {
     y += 18;
     for (const item of images.items ?? []) {
       this.link(20, y, `${item.name.toUpperCase()} (${item.nasaId})`, item.link);
-      B.text(20, y + 11, `${item.mission}. Credit: ${item.credit}`, { color: TEXT.muted, wrap: 600 });
-      y += 30;
+      const credit = B.text(20, y + 16, `${item.mission}. Credit: ${item.credit}`, { color: TEXT.muted, wrap: 600 });
+      y = credit.y + credit.height + 4;
     }
     B.text(20, 284, "The 'mysterious crater' in the story is made up. The photos are real.", { wrap: 600 });
   }
@@ -96,26 +98,28 @@ export class Credits extends Phaser.Scene {
   pageFacts() {
     const B = this.body;
     const osdr = this.credits.osdr;
-    B.text(20, 42, "3. FACTS AND LIMITS", { color: TEXT.accent });
+    B.text(20, 44, "3. FACTS AND LIMITS", { color: TEXT.accent });
     let y = 58;
     for (const fact of this.credits.staticFacts ?? []) {
       this.link(20, y, fact.fact, fact.link);
-      B.text(20, y + 11, fact.source, { color: TEXT.muted, wrap: 600 });
-      y += 28;
+      B.text(20, y + 16, fact.source, { color: TEXT.muted, wrap: 600 });
+      y += 38;
     }
     y += 4;
     B.text(20, y, `NASA OSDR STUDIES (${cachedOnText(osdr ?? {}).toUpperCase()})`, { color: TEXT.accent });
     y += 14;
     const items = osdr?.items ?? [];
     items.slice(0, 6).forEach((item, i) => {
-      this.link(20 + (i % 3) * 200, y + Math.floor(i / 3) * 14, `${item.accession} ${item.topic.toUpperCase()}`, item.link, 190);
+      this.link(20 + (i % 3) * 200, y + Math.floor(i / 3) * 20, `${item.accession} ${item.topic.toUpperCase()}`, item.link, 190);
     });
-    B.text(20, y + 34, "WHY: one fact card in the debrief, matched to how you played.", { wrap: 600, color: TEXT.muted });
+    B.text(20, y + 44, "WHY: one fact card in the debrief, matched to how you played.", { wrap: 600, color: TEXT.muted });
+    this.link(20, y + 70, "GLOSSARY TOPICS: NASA SPACE PLACE (spaceplace.nasa.gov/glossary)", "https://spaceplace.nasa.gov/glossary/en/");
+    B.text(20, y + 88, "Definitions are written fresh for this game, not copied.", { color: TEXT.muted });
   }
 
   pageHonesty() {
     const B = this.body;
-    B.text(20, 42, "4. WHAT IS REAL AND WHAT IS SIMPLIFIED", { color: TEXT.accent });
+    B.text(20, 44, "4. WHAT IS REAL AND WHAT IS SIMPLIFIED", { color: TEXT.accent });
     B.text(
       20,
       60,

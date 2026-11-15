@@ -9,7 +9,7 @@ import { Layer, clearFocusFor, drawStars } from "../ui/kit.js";
 import { Meter } from "../ui/Meter.js";
 import { Slider } from "../ui/Slider.js";
 import { Toggle } from "../ui/Toggle.js";
-import { showTooltip } from "../ui/Tooltip.js";
+import { infoButton, openInfo } from "../ui/InfoCard.js";
 
 /**
  * Developer screen that shows every reusable UI component in one place.
@@ -23,12 +23,12 @@ export class UiTest extends Phaser.Scene {
   create() {
     this.events.once("shutdown", () => clearFocusFor(this));
     const L = new Layer(this, { keys: true });
-    L.text(8, 8, "UI COMPONENTS", { size: 16, color: TEXT.accent });
+    L.text(8, 8, "UI COMPONENTS", { size: 32, color: TEXT.accent });
 
     // Six resource bars. Air is in danger, so it is the only one flashing.
     const meters = [["power", "POWER", 6, 8], ["oxygen", "OXYGEN", 5, 10], ["air", "AIR", 1, 10], ["food", "FOOD", 7, 10], ["water", "WATER", 4.5, 10], ["shield", "SHIELD", 1, 3]];
-    meters.forEach(([id, label, value, max], i) => {
-      const meter = new Meter(L, { id, label, x: 5 + i * 106, y: 36, width: 102, onInfo: () => showTooltip(this, label, "A one-line explanation appears here.") });
+    meters.forEach(([id, , value, max], i) => {
+      const meter = new Meter(L, { id, x: 8 + i * 105, y: 36, width: 94, onInfo: () => openInfo(this, `meter.${id}`) });
       meter.set(value, max, { danger: id === "air" });
     });
 
@@ -63,14 +63,14 @@ export class UiTest extends Phaser.Scene {
 
     L.text(8, 150, "TOGGLE", { color: TEXT.muted });
     new Toggle(L, { x: 80, y: 146, value: true });
-    L.text(8, 180, "TOOLTIP", { color: TEXT.muted });
-    L.button(140, 184, "REGOLITH?", () => showTooltip(this, "Regolith", "The loose gray dust and rocks that cover the Moon.", 140, 200), { w: 100 });
+    L.text(8, 184, "INFO CARD", { color: TEXT.muted });
+    infoButton(L, 120, 192, "item.shield");
 
     L.text(8, 226, "DATA BADGES", { color: TEXT.muted });
     dataBadge(L, 8, 240, { label: "Real X2.2 solar flare, 2024-05-09, NASA DONKI", real: true, url: "https://ccmc.gsfc.nasa.gov/tools/DONKI/" });
     dataBadge(L, 8, 276, { label: "Simplified from real lunar science", real: false });
 
-    L.button(580, 340, "TITLE", () => this.scene.start("Title"), { w: 96, key: "ESCAPE" });
+    L.button(580, 336, "TITLE", () => this.scene.start("Title"), { w: 100, h: 36, key: "ESCAPE" });
     L.focusFirst();
   }
 }

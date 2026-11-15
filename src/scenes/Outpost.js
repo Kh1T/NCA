@@ -2,8 +2,10 @@ import Phaser from "phaser";
 import { GROUND_Y, HEIGHT, PALETTE, TEXT, WIDTH, textStyle } from "../constants.js";
 import { ITEMS } from "../sim/buildings.js";
 import { drawShip, drawSite } from "../ui/art.js";
+import { drawIcon } from "../ui/icons.js";
+import { TouchPad } from "../ui/TouchPad.js";
 import { drawEarth, drawGround, drawHills, drawStars } from "../ui/backdrop.js";
-import { sfx } from "../ui/sfx.js";
+import { sfx, playMusic } from "../ui/sfx.js";
 
 export const WORLD_W = 1500;
 export const SHIP_X = 120;
@@ -38,6 +40,7 @@ export class Outpost extends Phaser.Scene {
     this.focusId = null;
 
     this.physics.world.setBounds(0, 0, WORLD_W, HEIGHT);
+    playMusic("base");
     this.cameras.main.setBounds(0, 0, WORLD_W, HEIGHT);
     drawStars(this, { seed: "outpost-sky", maxY: GROUND_Y - 20, scroll: 0, count: 90 });
     drawEarth(this, 520, 84);
@@ -57,7 +60,7 @@ export class Outpost extends Phaser.Scene {
     // Ship and two crewmates who stay near it.
     const ship = this.add.graphics();
     drawShip(ship, SHIP_X, GROUND_Y);
-    this.add.text(SHIP_X, GROUND_Y + 4, "SHIP", textStyle(8, "#23262d")).setOrigin(0.5, 0);
+    this.add.text(SHIP_X, GROUND_Y + 4, "SHIP", textStyle(16, "#23262d")).setOrigin(0.5, 0);
     if (this.textures.exists("astro-walk-3")) {
       this.add.image(SHIP_X - 52, GROUND_Y - 22, "astro-walk-3").setFlipX(true);
       this.add.image(SHIP_X - 86, GROUND_Y - 22, "astro-walk-6").setFlipX(true);
@@ -67,11 +70,13 @@ export class Outpost extends Phaser.Scene {
     this.sites = {};
     for (const [id, x] of Object.entries(SITE_X)) {
       const g = this.add.graphics();
-      const name = this.add.text(x, GROUND_Y + 4, ITEMS[id].short, textStyle(8, "#23262d")).setOrigin(0.5, 0);
-      const status = this.add.text(x, GROUND_Y + 13, "", textStyle(8, "#23262d")).setOrigin(0.5, 0);
+      const name = this.add.text(x, GROUND_Y + 4, ITEMS[id].short, textStyle(16, "#23262d")).setOrigin(0.5, 0);
+      // A status badge floats above each site: a picture, not a word.
+      const status = this.add.graphics().setDepth(4);
+      const days = this.add.text(x + 9, GROUND_Y - 78, "", textStyle(16, TEXT.accent)).setOrigin(0, 0.5).setDepth(4);
       const hit = this.add.rectangle(x, GROUND_Y - 24, 52, 52, 0x000000, 0.001).setInteractive({ useHandCursor: true });
       hit.on("pointerdown", () => this.walkTo(x, id));
-      this.sites[id] = { g, name, status, x };
+      this.sites[id] = { g, name, status, days, x };
     }
     const shipHit = this.add.rectangle(SHIP_X, GROUND_Y - 40, 60, 80, 0x000000, 0.001).setInteractive({ useHandCursor: true });
     shipHit.on("pointerdown", () => this.walkTo(SHIP_X, "ship"));
@@ -86,22 +91,25 @@ export class Outpost extends Phaser.Scene {
     this.physics.add.collider(this.player, this.solids);
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12, 0, 40);
 
-    this.prompt = this.add.text(0, 0, "", textStyle(8, TEXT.accent, { backgroundColor: "#05060a", padding: { x: 3, y: 2 } })).setOrigin(0.5, 1).setDepth(20);
+    this.prompt = this.add.text(0, 0, "", textStyle(16, TEXT.accent, { backgroundColor: "#05060a", padding: { x: 3, y: 2 } })).setOrigin(0.5, 1).setDepth(20);
     this.prompt.setInteractive({ useHandCursor: true });
     this.prompt.on("pointerdown", () => this.interact());
 
     // Day/night shading for the time-lapse and the long shadow.
     this.shade = this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x02030a, 0).setOrigin(0).setScrollFactor(0).setDepth(40);
-    this.dayText = this.add.text(WIDTH / 2, 150, "", textStyle(24, TEXT.white)).setOrigin(0.5).setScrollFactor(0).setDepth(41).setAlpha(0);
+    this.dayText = this.add.text(WIDTH / 2, 150, "", textStyle(48, TEXT.white)).setOrigin(0.5).setScrollFactor(0).setDepth(41).setAlpha(0);
 
     this.keys = this.input.keyboard.addKeys({
       left: "LEFT", right: "RIGHT", up: "UP", a: "A", d: "D", w: "W", space: "SPACE", e: "E", enter: "ENTER",
     });
     // Tap or click the ground to walk there.
     this.input.on("pointerdown", (pointer, over) => {
-      if (over.length === 0 && pointer.y > 62 && pointer.y < 322) this.walkTo(pointer.worldX, null);
+      if (over.length === 0 && pointer.y > 86 && pointer.y < 320) this.walkTo(pointer.worldX, null);
     });
     this.events.once("shutdown", () => this.registry.set("outpostX", this.player.x));
+
+    // On-screen buttons for touch screens (hidden until the first touch).
+    this.pad = new TouchPad(this, { y: 268 });
 
     this.scene.launch("OutpostUi");
     this.scene.bringToTop("OutpostUi");
@@ -118,14 +126,25 @@ export class Outpost extends Phaser.Scene {
     for (const [id, site] of Object.entries(this.sites)) {
       const building = state.buildings[id];
       drawSite(site.g, id, site.x, GROUND_Y, building, ITEMS[id].buildDays);
-      let label = "";
-      if (!building.packed) label = "NO PLAN";
-      else if (building.status === "idle") label = id === "rover" && state.phase < 2 ? "LOCKED" : "BUILD?";
-      else if (building.status === "building") label = `${Math.ceil(building.daysLeft)} DAY${Math.ceil(building.daysLeft) > 1 ? "S" : ""}`;
-      else if (building.health < 100) label = "BROKEN";
-      else if (!building.on) label = "OFF";
-      else label = "OK";
-      site.status.setText(label).setColor(label === "BROKEN" ? "#8f1d1d" : label === "OK" ? "#1d5c33" : "#3a3d44");
+      let icon = null;
+      let days = "";
+      if (!building.packed) icon = "cross";
+      else if (building.status === "idle") icon = id === "rover" && state.phase < 2 ? "lock" : null;
+      else if (building.status === "building") {
+        icon = "build";
+        days = `${Math.ceil(building.daysLeft)}d`;
+      } else if (building.health < 100) icon = "broken";
+      else if (!building.on) icon = "mute";
+      else icon = "check";
+      site.status.clear();
+      if (icon) {
+        site.status.fillStyle(0x05060a, 0.75);
+        site.status.fillCircle(site.x, GROUND_Y - 78, 12);
+        if (days) site.status.fillRect(site.x + 8, GROUND_Y - 86, 24, 16);
+        drawIcon(site.status, icon, site.x - 9, GROUND_Y - 87, 1.5);
+      }
+      site.days.setText(days);
+      site.name.setColor(building.packed ? "#23262d" : "#4c4f56");
     }
     const night = state.effects.nightDaysLeft > 0;
     this.baseShade = night ? 0.42 : 0;
@@ -210,6 +229,8 @@ export class Outpost extends Phaser.Scene {
       this.prompt.setVisible(false);
       // Swallow key presses made while a panel was open, so they do not fire later.
       for (const key of [k.e, k.enter, k.up, k.w, k.space]) Phaser.Input.Keyboard.JustDown(key);
+      this.pad.takeJump();
+      this.pad.takeUse();
       this.wasFrozen = true;
       return;
     }
@@ -222,7 +243,9 @@ export class Outpost extends Phaser.Scene {
     let direction = 0;
     if (k.left.isDown || k.a.isDown) direction = -1;
     else if (k.right.isDown || k.d.isDown) direction = 1;
-    let jump = Phaser.Input.Keyboard.JustDown(k.up) || Phaser.Input.Keyboard.JustDown(k.w) || Phaser.Input.Keyboard.JustDown(k.space);
+    else direction = this.pad.direction;
+    let jump = Phaser.Input.Keyboard.JustDown(k.up) || Phaser.Input.Keyboard.JustDown(k.w) || Phaser.Input.Keyboard.JustDown(k.space) || this.pad.takeJump();
+    const use = this.pad.takeUse();
 
     if (direction !== 0 || jump) {
       this.walkTarget = null;
@@ -254,8 +277,8 @@ export class Outpost extends Phaser.Scene {
     const near = this.nearest();
     if (near) {
       const label = near === "ship" ? "SHIP: PLAN THE DAY" : ITEMS[near].name.toUpperCase();
-      this.prompt.setText(`E: ${label}`).setPosition(this.player.x, this.player.y - 30).setVisible(true);
-      if (Phaser.Input.Keyboard.JustDown(k.e) || Phaser.Input.Keyboard.JustDown(k.enter)) this.interact();
+      this.prompt.setText(`${this.registry.get("touchUsed") ? "TAP: " : "E: "}${label}`).setPosition(this.player.x, this.player.y - 30).setVisible(true);
+      if (Phaser.Input.Keyboard.JustDown(k.e) || Phaser.Input.Keyboard.JustDown(k.enter) || use) this.interact();
     } else {
       this.prompt.setVisible(false);
     }

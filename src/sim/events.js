@@ -23,7 +23,7 @@ export const ALERTS = {
     id: "flare",
     title: "Solar flare!",
     icon: "sun",
-    explain: "The Sun just fired a burst of radiation at the Moon. Get everyone inside before it arrives.",
+    explain: "Radiation is coming! Get everyone inside.",
     source: { label: "NASA DONKI", real: true, url: "https://ccmc.gsfc.nasa.gov/tools/DONKI/" },
     timerSec: 12,
     control: "drag",
@@ -42,7 +42,7 @@ export const ALERTS = {
       const dose = event.dose ?? EVENT_DOSE.M;
       const exposed = C.OUTSIDE_FACTOR * wallFactor(state);
       if (result.option === "work") {
-        return { eventDose: dose * exposed, stat: "flaresWorked", note: "You kept working through the flare and took the full dose." };
+        return { eventDose: dose * exposed, stat: "flaresWorked", note: "You kept working and took the full dose." };
       }
       const q = result.quality ?? 1;
       const shieldOn = Boolean(result.shieldOn) && state.buildings.shield.status === "done" && state.power >= C.SHIELD_ON_POWER;
@@ -55,7 +55,7 @@ export const ALERTS = {
         slow: 0.5,
         stat: "shelters",
         cause: event.level === "SEP" ? "sheltering from a particle storm" : "sheltering from a solar flare",
-        note: q >= 1 ? "Everyone reached shelter in time." : "Not everyone reached shelter in time.",
+        note: q >= 1 ? "Everyone got inside in time!" : "Not everyone got inside in time.",
       };
     },
   },
@@ -64,7 +64,7 @@ export const ALERTS = {
     id: "night",
     title: "Long shadow",
     icon: "moon",
-    explain: "A long shadow is crossing the base. No sunlight for 2 days. Choose what stays on battery.",
+    explain: "No sunlight for 2 days. What stays on?",
     source: SIMPLIFIED,
     sourceNote: "A real lunar night lasts about 14 Earth days. The game shortens it.",
     timerSec: 0,
@@ -83,7 +83,7 @@ export const ALERTS = {
       return {
         effects: { nightDaysLeft: 2, nightGreenhouseOff: greenhouseOff, nightBuildOff: buildOff },
         cause: "the long shadow",
-        note: "No sunlight for 2 days. Builds move at half speed in the dark.",
+        note: "2 dark days. Builds go at half speed.",
       };
     },
   },
@@ -92,7 +92,7 @@ export const ALERTS = {
     id: "meteor",
     title: "Micrometeorite!",
     icon: "rock",
-    explain: "A tiny space rock hit the base. Steer the repair bot to the hole before it gets worse.",
+    explain: "A tiny space rock hit the base!",
     source: SIMPLIFIED,
     timerSec: 14,
     control: "joystick",
@@ -105,8 +105,8 @@ export const ALERTS = {
     scoreFn(result, state, event) {
       const fixed = result.option === "bot" && (result.quality ?? 0) >= 0.5;
       const power = result.option === "bot" ? -1 : 0;
-      if (fixed) return { power, repairId: event.targetId, note: "The repair bot sealed the hole." };
-      return { power, note: result.option === "bot" ? "The bot ran out of time. The damage is still there." : "The damage stays until you repair it." };
+      if (fixed) return { power, repairId: event.targetId, note: "The bot sealed the hole!" };
+      return { power, note: result.option === "bot" ? "The bot ran out of time." : "It stays broken until you repair it." };
     },
   },
 
@@ -114,7 +114,7 @@ export const ALERTS = {
     id: "leak",
     title: "Air leak!",
     icon: "leak",
-    explain: "Air is hissing out through a crack. Drag a patch onto it, then refill the cabin.",
+    explain: "Air is escaping through a crack! Patch it fast.",
     source: SIMPLIFIED,
     timerSec: 12,
     control: "drag",
@@ -125,12 +125,12 @@ export const ALERTS = {
     ],
     buildImpact: { slowFactor: 1, pause: false },
     scoreFn(result) {
-      if (result.option === "ignore") return { effects: { leak: true }, note: "The leak keeps losing air until you repair it." };
+      if (result.option === "ignore") return { effects: { leak: true }, note: "The leak loses air until you repair it." };
       const q = result.quality ?? 0;
-      if (q <= 0) return { air: -1.2, effects: { leak: true }, note: "The patch missed. The leak is still open." };
+      if (q <= 0) return { air: -1.2, effects: { leak: true }, note: "The patch missed! The leak is still open." };
       const refill = Math.min(1, Math.max(0, result.refill ?? 0.5));
       // A slow patch loses more air. The refill turns stored oxygen into cabin air.
-      return { air: -(0.3 + (1 - q)) + refill, oxygen: -refill, note: "Patched! You used stored oxygen to refill the cabin." };
+      return { air: -(0.3 + (1 - q)) + refill, oxygen: -refill, note: "Patched! Stored oxygen refilled the cabin." };
     },
   },
 
@@ -138,7 +138,7 @@ export const ALERTS = {
     id: "dust",
     title: "Sticky moon dust",
     icon: "dust",
-    explain: "Moon dust is clinging to the panels and filters. Wipe it off, or lose sunlight and clean air.",
+    explain: "Dust covers the solar panels. Wipe it off!",
     source: { label: "Apollo crews reported sticky dust. Simplified", real: false },
     timerSec: 14,
     control: "drag",
@@ -149,14 +149,14 @@ export const ALERTS = {
     ],
     buildImpact: { slowFactor: 0.5, pause: false },
     scoreFn(result) {
-      if (result.option === "leave") return { effects: { dust: true }, note: "The dust stays until you repair (clean) it." };
+      if (result.option === "leave") return { effects: { dust: true }, note: "The dust stays until you repair it." };
       const clean = (result.quality ?? 0) >= 0.6;
       return {
         power: -1,
         slow: 0.5,
         cause: "cleaning moon dust",
         effects: { dust: !clean },
-        note: clean ? "Panels and filters are clean again." : "Some dust is still stuck on the panels.",
+        note: clean ? "Panels are clean again!" : "Some dust is still stuck.",
       };
     },
   },
@@ -165,7 +165,7 @@ export const ALERTS = {
     id: "temp",
     title: "Temperature swing",
     icon: "thermo",
-    explain: "The ground is getting very cold. Set the heaters: more heat keeps work going but costs power.",
+    explain: "It is getting very cold. Set the heaters.",
     source: SIMPLIFIED,
     timerSec: 0,
     control: "slider",
@@ -185,7 +185,7 @@ export const ALERTS = {
         slow: 1 - 0.2 * missing,
         plantHealth: -0.15 * missing,
         cause: missing > 0 ? "the cold" : null,
-        note: missing === 0 ? "Full heat: work carried on as normal." : "The cold slowed the builds and stressed the plants.",
+        note: missing === 0 ? "Full heat! Work went on as normal." : "The cold slowed builds and stressed plants.",
       };
     },
   },
@@ -194,7 +194,7 @@ export const ALERTS = {
     id: "plant",
     title: "Sick plants",
     icon: "leaf",
-    explain: "The greenhouse plants are drooping. Extra water helps them recover, but water is also needed for oxygen.",
+    explain: "The plants are drooping. Give them extra water?",
     source: { label: "CSA food production toolkit. Simplified", real: false, url: "https://www.asc-csa.gc.ca/eng/youth-educators/toolkits/food-production/" },
     timerSec: 0,
     control: "slider",
@@ -212,7 +212,7 @@ export const ALERTS = {
       return {
         water: -0.3 * water,
         effects: { plantHealth: 0.4 + 0.2 * water, plantSickDays: 3 },
-        note: water === 3 ? "The plants got plenty of water and bounced back." : "The plants will grow less food for 3 days.",
+        note: water === 3 ? "Plenty of water! The plants bounced back." : "The plants grow less food for 3 days.",
       };
     },
   },
@@ -221,7 +221,7 @@ export const ALERTS = {
     id: "comms",
     title: "Earth calling",
     icon: "dish",
-    explain: "Mission Control spotted an odd sensor reading. Ask Earth which setting is right, or pick one yourself.",
+    explain: "Strange reading! Ask Earth, or decide yourself?",
     source: { label: "Radio takes about 1.3 seconds each way. Simplified", real: false },
     timerSec: 0,
     control: "toggle",
@@ -239,13 +239,13 @@ export const ALERTS = {
           slow: fast ? 1 : 0.5,
           power: fast ? -1 : 0,
           cause: fast ? null : "waiting for Earth's answer",
-          note: fast ? "The big antenna got Earth's answer fast. It cost 1 power." : "Earth's answer was right. Waiting slowed today's building.",
+          note: fast ? "The big antenna got Earth's answer fast!" : "Earth was right! Waiting slowed the builds.",
         };
       }
       const right = result.guessedRight ?? rand(state) < 0.5;
       return right
         ? { science: 2, note: "Good call! Your guess was right." }
-        : { water: -1, note: "Wrong setting. A valve dumped some water." };
+        : { water: -1, note: "Wrong valve! Some water spilled." };
     },
   },
 };
@@ -307,7 +307,7 @@ export function realEventsByDay(donki, missionDate, totalDays) {
       notices.push({
         kind: "cme",
         date,
-        text: "A cloud from the Sun is coming! NASA models say it is heading toward Earth and the Moon.",
+        text: "A Sun cloud is heading toward Earth and the Moon.",
         badge: `Real solar cloud (CME), ${date}, NASA DONKI`,
         link: cloud.link,
       });
@@ -317,7 +317,7 @@ export function realEventsByDay(donki, missionDate, totalDays) {
       notices.push({
         kind: "gst",
         date,
-        text: `A magnetic storm is shaking Earth today (Kp ${storm.maxKp}). People back home may see auroras.`,
+        text: `Magnetic storm on Earth (Kp ${storm.maxKp}). Auroras tonight!`,
         badge: `Real geomagnetic storm, ${date}, NASA DONKI`,
         link: storm.link,
       });
@@ -332,7 +332,7 @@ export function realEventsByDay(donki, missionDate, totalDays) {
  * events layered on top at random days. Uses state-style seeded randomness.
  * @returns {Record<number, {alerts: object[], notices: object[]}>}
  */
-export function buildSchedule({ donki, missionDate, totalDays, weatherDeck, seed = 1 }) {
+export function buildSchedule({ donki, missionDate, totalDays, weatherDeck, seed = 1, maxEvents = null }) {
   const rng = { rngState: seed | 0 };
   const schedule = {};
   for (const entry of realEventsByDay(donki, missionDate, totalDays)) {
@@ -353,7 +353,32 @@ export function buildSchedule({ donki, missionDate, totalDays, weatherDeck, seed
       schedule[day].alerts.push({ id, real: false });
     }
   }
+  if (maxEvents !== null && maxEvents !== undefined) capEvents(schedule, maxEvents);
   return schedule;
+}
+
+/**
+ * Keep only the `max` strongest alerts in the whole mission (difficulty).
+ * Real solar events rank above deck events; stronger events above weaker;
+ * earlier days win ties. Notices (no decision needed) are never removed.
+ */
+export function capEvents(schedule, max) {
+  const all = [];
+  for (const [day, entry] of Object.entries(schedule)) {
+    entry.alerts.forEach((alert, index) => {
+      const rank = alert.real ? 10 + (alert.dose ?? 0) * 100 : 1;
+      all.push({ day: Number(day), index, alert, rank });
+    });
+  }
+  all.sort((a, b) => b.rank - a.rank || a.day - b.day);
+  const keep = new Set(all.slice(0, Math.max(0, max)).map((e) => e.alert));
+  for (const entry of Object.values(schedule)) entry.alerts = entry.alerts.filter((alert) => keep.has(alert));
+  return schedule;
+}
+
+/** Count the alerts in a schedule. */
+export function countEvents(schedule) {
+  return Object.values(schedule).reduce((sum, entry) => sum + entry.alerts.length, 0);
 }
 
 /**

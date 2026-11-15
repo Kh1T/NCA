@@ -1,5 +1,4 @@
 import Phaser from "phaser";
-import { PALETTE, TEXT } from "../constants.js";
 import { CommsWait, HeatSlider, NightSwitches, PlantBalance } from "../minigames/Controls.js";
 import { DragToShelter } from "../minigames/DragToShelter.js";
 import { DustWipe } from "../minigames/DustWipe.js";
@@ -7,25 +6,30 @@ import { PatchLeak } from "../minigames/PatchLeak.js";
 import { RepairBot } from "../minigames/RepairBot.js";
 import { ALERTS, applyAlertResult } from "../sim/events.js";
 import { AlertCard, CARD } from "../ui/AlertCard.js";
+import { costChips } from "../ui/chips.js";
 import { clearFocusFor } from "../ui/kit.js";
-import { sfx } from "../ui/sfx.js";
 
 const GAMES = { DragToShelter, PatchLeak, DustWipe, RepairBot, NightSwitches, HeatSlider, PlantBalance, CommsWait };
 
-/** Plain-language "what is happening", adjusted to the exact event. */
+/** An icon for each choice button. */
+const OPTION_ICON = {
+  shelter: "ship", work: "build", bot: "wrench", leave: "cross", patch: "leak", ignore: "cross", wipe: "dust",
+};
+
+/** One short line about what is happening, adjusted to the exact event. */
 function explainFor(event, def) {
   if (event.id === "flare") {
-    if (event.level === "SEP") return "A particle storm is coming: the strongest kind of space radiation. Get everyone inside before it arrives!";
-    if (event.level === "X") return "The Sun fired one of its biggest flares. Radiation is racing toward the Moon. Get everyone inside!";
-    return "The Sun fired a medium flare. A small burst of radiation is on its way. Get everyone inside!";
+    if (event.level === "SEP") return "The strongest radiation there is. Get inside!";
+    if (event.level === "X") return "A huge flare! Radiation is racing here. Get inside!";
+    return "Radiation is on its way. Get everyone inside!";
   }
-  if (event.id === "meteor" && event.targetName) return `A tiny space rock hit the ${event.targetName.toLowerCase()}! Steer the repair bot to the hole.`;
+  if (event.id === "meteor" && event.targetName) return `A space rock hit the ${event.targetName.toLowerCase()}!`;
   return def.explain;
 }
 
 /**
  * One alert, shown over the outpost. Every alert uses the same card:
- * title, what is happening, data badge, choices with costs, then the result.
+ * picture and title, one line, data badge, choices with costs, the result.
  * Started with { event, onDone(note) }.
  */
 export class Alert extends Phaser.Scene {
@@ -50,12 +54,13 @@ export class Alert extends Phaser.Scene {
     const source = this.event.real
       ? { label: this.event.badge, real: true, link: this.event.link }
       : this.def.source;
+    const info = this.event.id === "flare" && this.event.level === "SEP" ? "alert.storm" : `alert.${this.event.id}`;
     this.card = new AlertCard(this, {
       icon: this.def.icon,
       title: this.event.title ?? this.def.title,
       explain: explainFor(this.event, this.def),
       source,
-      sourceNote: this.def.sourceNote,
+      info,
     });
 
     const hasChoice = this.def.options.some((option) => option.play);
@@ -63,16 +68,21 @@ export class Alert extends Phaser.Scene {
     else this.startGame(null);
   }
 
-  /** Two options side by side, each with its cost in plain sight. */
+  /** Two options side by side, each with its cost as icons. */
   showChoices() {
-    const options = this.def.options.map((option) => ({
-      label: option.label,
-      cost: option.costTextBy?.[this.event.level] ?? option.costText,
-      onPick: () => {
-        if (option.play) this.startGame(option.id);
-        else this.finish({ option: option.id });
-      },
-    }));
+    const options = this.def.options.map((option) => {
+      // A particle storm keeps everyone inside all day.
+      const chips = option.id === "shelter" && this.event.level === "SEP" ? [["clock", "-1 DAY"]] : costChips(option.cost);
+      return {
+        label: option.label,
+        icon: OPTION_ICON[option.id],
+        chips,
+        onPick: () => {
+          if (option.play) this.startGame(option.id);
+          else this.finish({ option: option.id });
+        },
+      };
+    });
     this.card.showChoices(options);
   }
 
@@ -116,17 +126,15 @@ export class Alert extends Phaser.Scene {
     const before = { dose: this.state.today.eventDose, power: this.state.power };
     const { note } = applyAlertResult(this.state, this.event, result);
     const dose = this.state.today.eventDose - before.dose;
-    const lines = [];
-    if (dose > 0.005) lines.push(`RADIATION: +${dose.toFixed(1)} mSv`);
+    const chips = [];
+    if (dose > 0.005) chips.push(["dose", `+${dose.toFixed(1)} mSv`, "#ffb347"]);
     const power = this.state.power - before.power;
-    if (power < 0) lines.push(`POWER: ${power.toFixed(0)}`);
-    sfx(dose > 2 || /missed|ran out|Wrong|still/.test(note) ? "bad" : "good");
-    this.card.showResult(note, lines, () => {
+    if (power < 0) chips.push(["power", `${power.toFixed(0)}`, "#ff5d5d"]);
+    const good = !(dose > 2 || /missed|ran out|Wrong|still|Not everyone|full dose|stays|loses/.test(note));
+    this.card.showResult(note, chips, good, () => {
       const done = this.onDone;
       this.scene.stop();
       done?.(note);
     });
   }
 }
-
-export { PALETTE, TEXT };

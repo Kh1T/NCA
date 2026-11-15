@@ -23,9 +23,9 @@ export class DustWipe {
     for (let i = 0; i < COLS * ROWS; i += 1) this.cells.push(true);
     this.dirty = COLS * ROWS;
 
-    layer.text(area.x, area.y, "WIPE THE PANEL! MOVE OVER THE DUST (OR ARROW KEYS)", { color: TEXT.accent });
+    layer.text(area.x, area.y, "RUB THE DUST OFF THE PANEL!", { color: TEXT.accent });
     this.g = layer.gfx();
-    this.count = layer.text(area.x + area.w, area.y + 132, "", { origin: 1, color: TEXT.muted });
+    this.count = layer.text(area.x + area.w, area.y + 140, "", { origin: 1, color: TEXT.muted, size: 22 });
 
     this.onMove = (pointer) => {
       const col = Math.floor((pointer.x - this.left) / CELL);
@@ -83,7 +83,7 @@ export class DustWipe {
     const cy = this.top + this.cursor.row * CELL;
     g.lineStyle(2, 0xffffff, 1);
     g.strokeRect(cx - 1, cy - 1, CELL, CELL);
-    this.count.setText(`DUSTY SQUARES LEFT: ${this.dirty}`);
+    this.count.setText(`DUST LEFT: ${this.dirty}`);
   }
 
   timeUp() {

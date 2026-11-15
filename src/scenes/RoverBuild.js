@@ -1,7 +1,8 @@
 import Phaser from "phaser";
-import { GROUND_Y, PALETTE, TEXT, WIDTH } from "../constants.js";
-import { ITEMS } from "../sim/buildings.js";
-import { drawCeres, drawRover } from "../ui/art.js";
+import { PALETTE, TEXT, UI, WIDTH } from "../constants.js";
+import { CORE, ITEMS } from "../sim/buildings.js";
+import { drawChips } from "../ui/chips.js";
+import { ITEM_ICON, drawIcon } from "../ui/icons.js";
 import { Layer, clearFocusFor } from "../ui/kit.js";
 import { sfx } from "../ui/sfx.js";
 
@@ -23,25 +24,37 @@ export class RoverBuild extends Phaser.Scene {
     const state = this.registry.get("state");
     const L = new Layer(this, { depth: 600, keys: true });
     L.dim(0.75);
-    L.panel(90, 70, 460, 210, { edge: PALETTE.good, alpha: 1 });
-    L.text(WIDTH / 2, 84, "PHASE 2", { size: 24, color: TEXT.good, origin: 0.5 });
-    L.text(WIDTH / 2, 116, "BUILD THE ROVER", { size: 16, color: TEXT.accent, origin: 0.5 });
+    L.panel(80, 50, 480, 250, { edge: PALETTE.good, alpha: 1 });
+    const title = L.text(WIDTH / 2, 58, "ALL 6 BUILT!", { size: UI.huge, color: TEXT.good, origin: 0.5 });
+    this.tweens.add({ targets: title, scale: { from: 0.5, to: 1 }, duration: 500, ease: "Back.easeOut" });
+
+    // Six ticks, one per building.
     const g = L.gfx();
-    drawRover(g, 200, 250);
-    drawCeres(g, 130, 250);
+    CORE.forEach((id, i) => {
+      const x = 130 + i * 66;
+      g.fillStyle(0x0b1018, 1);
+      g.fillRect(x - 24, 118, 48, 48);
+      drawIcon(g, ITEM_ICON[id], x - 12, 124, 2);
+      drawIcon(g, "check", x + 8, 152, 1);
+    });
+
     const packed = state.buildings.rover.packed;
     const daysLeft = state.totalDays - state.day + 1;
-    const body = packed
-      ? `All six buildings are standing! The rover site at the far right end of the base is unlocked.\n\nIt takes ${ITEMS.rover.buildDays} days to build. Days left: ${daysLeft}. Weather can still slow it, and the crew still needs air, water and food.`
-      : "All six buildings are standing! But no rover blueprint was packed, so the crew cannot reach the craters. Keep the base running until the mission ends.";
-    L.text(250, 146, body, { wrap: 284 });
+    if (packed) {
+      drawIcon(g, "rover", 150, 182, 4);
+      L.text(220, 186, "NOW BUILD THE ROVER!", { size: UI.big, color: TEXT.accent });
+      drawChips(L, 220, 214, [["clock", `${ITEMS.rover.buildDays} DAYS`], ["calendar", `${daysLeft} DAYS LEFT`]]);
+    } else {
+      drawIcon(g, "cross", 150, 186, 3);
+      L.text(200, 186, "No rover was packed.", { size: UI.big, color: TEXT.danger });
+      L.text(200, 214, "Keep the base running to the end!", { color: TEXT.muted });
+    }
     sfx("win");
-    const button = L.button(WIDTH / 2, 262, "GOT IT", () => {
+    const button = L.button(WIDTH / 2, 272, "GOT IT", () => {
       const done = this.onDone;
       this.scene.stop();
       done?.();
-    }, { w: 110, key: "ENTER" });
+    }, { w: 140, h: 36, key: "ENTER", icon: "check" });
     L.focusFirst(button);
-    void GROUND_Y;
   }
 }

@@ -1,4 +1,5 @@
-import { PALETTE, TEXT } from "../constants.js";
+import { PALETTE, TEXT, UI } from "../constants.js";
+import { drawChips } from "../ui/chips.js";
 import { C } from "../sim/rules.js";
 import { drawShip } from "../ui/art.js";
 import { sfx } from "../ui/sfx.js";
@@ -20,19 +21,19 @@ export class DragToShelter {
     this.inside = 0;
     layer.focus.arrowsMove = false;
 
-    const groundY = area.y + 116;
+    const groundY = area.y + 122;
     this.groundY = groundY;
     this.doorX = area.x + area.w - 70;
     const g = layer.gfx();
     g.fillStyle(PALETTE.regolith, 1);
     g.fillRect(area.x, groundY, area.w, 4);
     drawShip(g, this.doorX + 20, groundY);
-    layer.text(area.x, area.y, "DRAG THE CREW INTO THE SHIP! (OR PRESS 1, 2, 3)", { color: TEXT.accent });
+    layer.text(area.x, area.y, "DRAG OR TAP THE CREW INTO THE SHIP!", { color: TEXT.accent });
 
     this.crew = [];
     for (let i = 0; i < CREW; i += 1) {
       const sprite = layer.add(scene.add.sprite(area.x + 40 + i * 100, groundY - 22, "astro-walk-1"));
-      const label = layer.text(sprite.x, groundY - 58, String(i + 1), { origin: 0.5, color: TEXT.accent });
+      const label = layer.text(sprite.x, groundY - 62, String(i + 1), { origin: 0.5, color: TEXT.accent, size: UI.big });
       sprite.setInteractive({ useHandCursor: true, draggable: true });
       const member = { sprite, label, walking: false, inside: false, dragging: false };
       sprite.on("pointerdown", () => { member.walking = true; });
@@ -56,12 +57,12 @@ export class DragToShelter {
     const state = ctx.state;
     this.shieldOn = false;
     if (state.buildings.shield.status === "done" && state.power >= C.SHIELD_ON_POWER) {
-      layer.text(area.x, area.y + 132, `S: SHIELD POWER (COSTS ${C.SHIELD_ON_POWER} POWER, DOSE CUT TO 10%)`, { color: TEXT.muted });
-      this.toggle = new Toggle(layer, { x: area.x + 416, y: area.y + 128, value: false, onChange: (value) => { this.shieldOn = value; } });
+      drawChips(layer, area.x, area.y + 142, [["shield", "SHIELD POWER (S)"], ["power", `-${C.SHIELD_ON_POWER}`, TEXT.danger], ["dose", "MUCH LESS", TEXT.good]]);
+      this.toggle = new Toggle(layer, { x: area.x + 420, y: area.y + 140, value: false, onChange: (value) => { this.shieldOn = value; } });
       layer.focus.hotkey("S", () => this.toggle.activate());
     } else {
-      const why = state.buildings.shield.status === "done" ? "NOT ENOUGH POWER FOR THE SHIELD" : "NO SHIELD WALL YET: THE SHIP IS YOUR SHELTER";
-      layer.text(area.x, area.y + 132, why, { color: "#4c5566" });
+      const why = state.buildings.shield.status === "done" ? "NOT ENOUGH POWER FOR THE SHIELD" : "THE SHIP IS YOUR SHELTER";
+      drawChips(layer, area.x, area.y + 142, [["ship", why, "#8d98ab"]], { size: UI.body });
     }
   }
 
@@ -70,7 +71,7 @@ export class DragToShelter {
     member.inside = true;
     member.walking = false;
     member.sprite.setVisible(false).disableInteractive();
-    member.label.setText("OK").setColor(TEXT.good).setX(this.doorX + 20 + (this.inside - 1) * 22).setY(this.groundY - 96);
+    member.label.setText("✓").setColor(TEXT.good).setX(this.doorX + 4 + this.inside * 14).setY(this.groundY - 96);
     this.inside += 1;
     sfx("good");
     if (this.inside === CREW) this.finish();

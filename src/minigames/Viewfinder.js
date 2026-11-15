@@ -1,5 +1,8 @@
 import Phaser from "phaser";
-import { PALETTE, TEXT } from "../constants.js";
+import { PALETTE, TEXT, UI } from "../constants.js";
+import { drawChips } from "../ui/chips.js";
+import { dataBadge } from "../ui/DataBadge.js";
+import { infoButton } from "../ui/InfoCard.js";
 import { framingStars } from "../sim/rules.js";
 import { Layer, drawStars, openLink } from "../ui/kit.js";
 import { sfx } from "../ui/sfx.js";
@@ -47,8 +50,7 @@ export class Viewfinder {
     L.focus.arrowsMove = false;
     L.dim(0.8);
     L.panel(120, 34, 400, 290, { edge: PALETTE.accent, alpha: 1 });
-    L.text(320, 44, "MOVE THE FRAME OVER THE TARGET, THEN SNAP!", { origin: 0.5, color: TEXT.accent });
-    L.text(320, 58, "ARROW KEYS OR POINTER TO MOVE. SPACE TO SNAP.", { origin: 0.5, color: TEXT.muted });
+    L.text(320, 42, "FRAME THE TARGET, THEN SNAP!", { origin: 0.5, color: TEXT.accent, size: UI.big });
 
     const key = pixelated(scene, `crater-${crater.nasaId}`);
     if (key) {
@@ -77,7 +79,7 @@ export class Viewfinder {
     };
     scene.input.on("pointermove", this.onMove);
     scene.input.on("pointerdown", this.onMove);
-    this.snapButton = L.button(320, 300, "SNAP!", () => this.snap(), { w: 120, h: 24, key: "SPACE" });
+    this.snapButton = L.button(320, 298, "SNAP!", () => this.snap(), { w: 150, h: 36, key: "SPACE", icon: "camera" });
     L.focus.hotkey("ENTER", () => this.snap());
     L.focusFirst(this.snapButton);
   }
@@ -143,7 +145,7 @@ export class Viewfinder {
     const L = (this.layer = new Layer(scene, { depth: 300, fixed: true, keys: true }));
     L.dim(0.85);
     L.panel(60, 14, 520, 332, { edge: PALETTE.good, alpha: 1 });
-    L.text(76, 24, crater.name.toUpperCase(), { size: 16, color: TEXT.accent });
+    L.text(76, 24, crater.name.toUpperCase(), { size: 32, color: TEXT.accent });
     const g = L.gfx();
     drawStars(g, 500, 32, stars, 3, 7);
     const key = `crater-${crater.nasaId}`;
@@ -156,13 +158,14 @@ export class Viewfinder {
       L.text(210, 140, "PHOTO NOT LOADED", { origin: 0.5, color: TEXT.muted });
     }
     L.text(356, 56, "THE REAL PLACE", { color: TEXT.good });
-    L.text(356, 74, crater.kidFact, { wrap: 212 });
-    L.text(356, 160, `FRAMING: ${["", "OK", "GOOD", "PERFECT"][stars]}`, { color: TEXT.accent });
-    L.text(356, 180, `PHOTO: ${crater.mission}`, { wrap: 212, color: TEXT.muted });
-    L.text(76, 258, `REAL NASA IMAGE. CREDIT: ${crater.credit}`, { wrap: 488, color: TEXT.good });
-    L.text(76, 284, "The clock is paused while you look.", { color: TEXT.muted });
-    L.button(170, 322, "SEE IT AT NASA", () => openLink(crater.link), { w: 150 });
-    const next = L.button(480, 322, "KEEP GOING", () => this.close(), { w: 130, key: "ENTER" });
+    infoButton(L, 556, 64, "place.crater", { focus: false });
+    L.text(356, 76, crater.kidFact, { wrap: 212 });
+    L.text(356, 176, ["", "OK SHOT", "GOOD SHOT!", "PERFECT SHOT!"][stars], { color: TEXT.accent, size: UI.big });
+    L.text(356, 202, crater.mission, { wrap: 212, color: TEXT.muted });
+    dataBadge(L, 76, 256, { label: `NASA image. Credit: ${crater.credit}`, real: true, url: crater.link }, { maxWidth: 488 });
+    drawChips(L, 76, 290, [["clock", "PAUSED", TEXT.muted]], { size: UI.body, iconScale: 1 });
+    L.button(250, 322, "SEE AT NASA", () => openLink(crater.link), { w: 150, h: 34 });
+    const next = L.button(480, 322, "KEEP GOING", () => this.close(), { w: 150, h: 34, key: "ENTER", icon: "play" });
     L.focusFirst(next);
   }
 

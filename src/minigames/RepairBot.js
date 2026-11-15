@@ -16,19 +16,19 @@ export class RepairBot {
     this.finished = false;
     this.time = 0;
     layer.focus.arrowsMove = false;
-    this.box = { x: area.x, y: area.y + 16, w: area.w, h: 116 };
+    this.box = { x: area.x, y: area.y + 20, w: area.w, h: 140 };
     const b = this.box;
 
-    layer.text(area.x, area.y, "STEER THE BOT TO THE HOLE! (ARROW KEYS OR HOLD CLICK)", { color: TEXT.accent });
+    layer.text(area.x, area.y, "STEER THE BOT TO THE HOLE! (ARROWS OR HOLD)", { color: TEXT.accent });
     const bg = layer.gfx();
     bg.fillStyle(0x1b2029, 1);
     bg.fillRect(b.x, b.y, b.w, b.h);
 
     // Blocks in the way, with a gap to steer through.
     this.blocks = [
-      { x: b.x + 130, y: b.y, w: 16, h: 66 },
-      { x: b.x + 250, y: b.y + 50, w: 16, h: 66 },
-      { x: b.x + 370, y: b.y, w: 16, h: 60 },
+      { x: b.x + 130, y: b.y, w: 16, h: 82 },
+      { x: b.x + 250, y: b.y + 58, w: 16, h: 82 },
+      { x: b.x + 370, y: b.y, w: 16, h: 76 },
     ];
     bg.fillStyle(0x55585f, 1);
     for (const block of this.blocks) bg.fillRect(block.x, block.y, block.w, block.h);

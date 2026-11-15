@@ -1,7 +1,8 @@
 // Small UI toolkit for the Moon game: layers, panels, buttons and keyboard focus.
 // Everything is drawn with Phaser shapes and the pixel font, so it scales cleanly.
 
-import { PALETTE, TEXT, WIDTH, HEIGHT, textStyle } from "../constants.js";
+import { PALETTE, TEXT, UI, WIDTH, HEIGHT, textStyle } from "../constants.js";
+import { drawIcon } from "./icons.js";
 import { sfx } from "./sfx.js";
 
 /**
@@ -121,7 +122,7 @@ export class Layer {
 
   /** Options: size, color, wrap (px), origin (0, 0.5, 1 or [x, y]), align. */
   text(x, y, str, o = {}) {
-    const style = textStyle(o.size ?? 8, o.color ?? TEXT.white, { align: o.align ?? "left", lineSpacing: o.lineSpacing ?? 3 });
+    const style = textStyle(o.size ?? 16, o.color ?? TEXT.white, { align: o.align ?? "left", lineSpacing: o.lineSpacing ?? 0 });
     if (o.wrap) style.wordWrap = { width: o.wrap };
     const text = this.scene.add.text(Math.round(x), Math.round(y), str, style);
     const origin = o.origin ?? 0;
@@ -157,17 +158,27 @@ export class Layer {
 
   /**
    * A button. x, y is its centre.
-   * Options: w, h, color, edge, fill, key (hotkey name), small, enabled.
+   * Options: w, h, size (font), icon (icon id drawn left of the label),
+   * color, edge, fill, key (hotkey name), enabled.
    */
   button(x, y, label, onClick, o = {}) {
     const scene = this.scene;
-    const w = o.w ?? Math.max(48, label.length * 8 + 16);
-    const h = o.h ?? 18;
+    const size = o.size ?? (o.h && o.h < 28 ? UI.small : UI.big);
+    const iconW = o.icon ? 22 : 0;
+    const w = o.w ?? Math.max(56, label.length * size * 0.42 + 24 + iconW);
+    const h = o.h ?? UI.button;
     const edge = o.edge ?? PALETTE.accent;
     const bg = scene.add.rectangle(x, y, w, h, o.fill ?? 0x1a2230, 1).setStrokeStyle(1, edge).setInteractive({ useHandCursor: true });
-    const text = scene.add.text(x, y + 1, label, textStyle(8, o.color ?? TEXT.white)).setOrigin(0.5);
+    const text = scene.add.text(x + iconW / 2, y, label, textStyle(size, o.color ?? TEXT.white)).setOrigin(0.5);
     this.add(bg);
     this.add(text);
+    let iconG = null;
+    if (o.icon) {
+      iconG = this.gfx();
+      const scale = h >= 30 ? 1.5 : 1;
+      const left = label ? x + iconW / 2 - text.width / 2 - 6 - 12 * scale : x - 6 * scale;
+      drawIcon(iconG, o.icon, Math.round(left), Math.round(y - 6 * scale), scale);
+    }
 
     const button = {
       bg,
@@ -181,6 +192,7 @@ export class Layer {
         bg.setFillStyle(!this.enabled ? 0x14181f : this.selected ? 0x2c4a3a : lit ? 0x2a3850 : o.fill ?? 0x1a2230, 1);
         bg.setStrokeStyle(this.focused ? 2 : 1, !this.enabled ? 0x2a303b : this.focused ? 0xffffff : this.selected ? PALETTE.good : edge);
         text.setColor(!this.enabled ? "#4c5566" : o.color ?? TEXT.white);
+        iconG?.setAlpha(this.enabled ? 1 : 0.35);
       },
       setFocus(value) {
         this.focused = value;
@@ -200,9 +212,18 @@ export class Layer {
         text.setText(value);
         return this;
       },
+      setIcon(id) {
+        if (!iconG) return this;
+        const scale = h >= 30 ? 1.5 : 1;
+        iconG.clear();
+        const left = text.text ? x + iconW / 2 - text.width / 2 - 6 - 12 * scale : x - 6 * scale;
+        drawIcon(iconG, id, Math.round(left), Math.round(y - 6 * scale), scale);
+        return this;
+      },
       setVisible(value) {
         bg.setVisible(value);
         text.setVisible(value);
+        iconG?.setVisible(value);
         if (value) bg.setInteractive({ useHandCursor: true });
         else bg.disableInteractive();
         return this;
@@ -222,9 +243,10 @@ export class Layer {
         onClick();
       },
     };
-    bg.on("pointerover", () => {
+    bg.on("pointerover", (pointer) => {
       button.hover = true;
       button.paint();
+      if (button.enabled && !pointer?.wasTouch) sfx("hover");
       o.onHover?.();
     });
     bg.on("pointerout", () => {
@@ -238,6 +260,12 @@ export class Layer {
       if (o.key) this.focus.hotkey(o.key, () => button.activate());
     }
     return button;
+  }
+
+  /** A square button that shows only an icon (sound, glossary, info...). */
+  iconButton(x, y, icon, onClick, o = {}) {
+    const size = o.size ?? UI.tap;
+    return this.button(x, y, "", onClick, { ...o, w: size, h: size, icon });
   }
 
   /** Give keyboard focus to the first usable control. */
@@ -259,8 +287,8 @@ export class Layer {
 }
 
 /** Size of a block of wrapped pixel text, without leaving it on screen. */
-export function measure(scene, str, wrap, size = 8) {
-  const probe = scene.add.text(0, 0, str, { ...textStyle(size, TEXT.white, { lineSpacing: 3 }), wordWrap: wrap ? { width: wrap } : undefined });
+export function measure(scene, str, wrap, size = 16) {
+  const probe = scene.add.text(0, 0, str, { ...textStyle(size, TEXT.white, { lineSpacing: 0 }), wordWrap: wrap ? { width: wrap } : undefined });
   const result = { width: probe.width, height: probe.height };
   probe.destroy();
   return result;
@@ -288,22 +316,29 @@ export function drawStars(g, x, y, count, max = 3, size = 5, gap = 4) {
 }
 
 /** A simple message pop-up with one or two buttons. Returns the layer. */
-export function dialog(scene, { title, body, buttons, depth = 300, width = 420 }) {
+export function dialog(scene, { title, body, buttons, depth = 300, width = 420, icon = null }) {
   const layer = new Layer(scene, { depth, fixed: true, keys: true });
   layer.dim(0.7);
   const x = (WIDTH - width) / 2;
-  const height = 30 + measure(scene, body, width - 32).height + 16 + 34;
+  const bodyH = body ? measure(scene, body, width - 32, UI.big).height : 0;
+  const height = 50 + bodyH + 14 + 46;
   const y = Math.round((HEIGHT - height) / 2);
   layer.panel(x, y, width, height, { edge: PALETTE.accent });
-  layer.text(x + 16, y + 12, title, { color: TEXT.accent });
-  layer.text(x + 16, y + 30, body, { wrap: width - 32 });
+  let tx = x + 16;
+  if (icon) {
+    drawIcon(layer.gfx(), icon, x + 16, y + 14, 2);
+    tx += 34;
+  }
+  layer.text(tx, y + 10, title, { size: UI.title, color: TEXT.accent });
+  if (body) layer.text(x + 16, y + 50, body, { wrap: width - 32, size: UI.big });
   const total = buttons.length;
+  const bw = Math.min(170, (width - 32) / total - 10);
   buttons.forEach((b, i) => {
-    const bx = WIDTH / 2 + (i - (total - 1) / 2) * 150;
-    layer.button(bx, y + height - 20, b.label, () => {
+    const bx = WIDTH / 2 + (i - (total - 1) / 2) * (bw + 12);
+    layer.button(bx, y + height - 28, b.label, () => {
       layer.destroy();
       b.onClick?.();
-    }, { w: 136, key: b.key });
+    }, { w: bw, h: UI.tap - 4, key: b.key, icon: b.icon });
   });
   layer.focusFirst();
   return layer;

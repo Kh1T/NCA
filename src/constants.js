@@ -5,7 +5,22 @@ export const WIDTH = 640;
 export const HEIGHT = 360;
 export const GROUND_Y = 300;
 
-export const FONT = '"Press Start 2P", monospace';
+export const FONT = '"VT323", monospace';
+
+/**
+ * Size rules for a 7–12 audience on desktop and phones (VT323 renders small).
+ * On a phone in landscape the canvas is shown at about 1.1×, so 16 canvas px
+ * is about 18 css px and a 40 px button is about 44 css px.
+ */
+export const UI = {
+  small: 16, // the smallest text anywhere
+  body: 16,
+  big: 22,
+  title: 32,
+  huge: 48,
+  button: 32, // default button height
+  tap: 40, // touch targets: buttons the player taps during play
+};
 
 export const PALETTE = {
   sky: 0x05060a,
@@ -31,7 +46,7 @@ export const TEXT = {
   danger: "#ff5d5d",
 };
 
-/** Text style helper. Sizes are multiples of 8 so the pixel font stays crisp. */
-export function textStyle(size = 8, color = TEXT.white, extra = {}) {
+/** Text style helper. `size` is the real font size in canvas pixels. */
+export function textStyle(size = UI.body, color = TEXT.white, extra = {}) {
   return { fontFamily: FONT, fontSize: `${size}px`, color, ...extra };
 }

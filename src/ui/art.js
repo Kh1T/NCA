@@ -222,3 +222,8 @@ export function drawCeres(g, x, y) {
   g.fillRect(x - 8, y - 4, 6, 4);
   g.fillRect(x + 2, y - 4, 6, 4);
 }
+
+/** A finished building on its own, for info cards and pop-ups. */
+export function drawBuilding(g, id, x, y) {
+  DRAW[id]?.(g, x, y);
+}

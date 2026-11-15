@@ -1,8 +1,10 @@
-import { PALETTE, TEXT } from "../constants.js";
+import { PALETTE } from "../constants.js";
 import { sfx } from "./sfx.js";
 
+const BTN = 26; // the - and + boxes
+
 /**
- * A stepped slider drawn as a row of boxes ("pips"). Click a box, press the
+ * A stepped slider drawn as a row of boxes ("pips"). Tap a box, tap the
  * - / + buttons, or use Left / Right when it has keyboard focus.
  * Whole steps are easier for young players than a free-sliding handle.
  */
@@ -19,33 +21,35 @@ export class Slider {
     this.max = o.max;
     this.value = Math.min(o.value ?? 0, o.max);
     this.color = o.color ?? PALETTE.accent;
-    this.pip = o.pip ?? 12;
+    this.pip = o.pip ?? 20;
     this.limit = o.limit ?? (() => this.max);
     this.onChange = o.onChange ?? (() => {});
     this.focused = false;
     this.enabled = true;
 
     const size = this.pip;
-    this.minus = layer.text(o.x, o.y + 2, "-", { color: TEXT.accent });
+    const midY = o.y + size / 2;
+    this.pipsX = o.x + BTN + 6;
     this.g = layer.gfx();
-    this.plus = layer.text(o.x + 14 + this.max * (size + 2) + 4, o.y + 2, "+", { color: TEXT.accent });
     this.hits = [];
     for (let i = 0; i < this.max; i += 1) {
-      const hit = layer.rect(o.x + 14 + i * (size + 2), o.y, size, size, 0x000000, 0.001).setInteractive({ useHandCursor: true });
-      // Clicking the last filled box empties it, so every value can be reached.
+      const hit = layer.rect(this.pipsX + i * (size + 3), o.y - 6, size + 3, size + 12, 0x000000, 0.001).setInteractive({ useHandCursor: true });
+      // Tapping the last filled box empties it, so every value can be reached.
       hit.on("pointerdown", () => this.set(this.value === i + 1 ? i : i + 1));
       this.hits.push(hit);
     }
-    for (const [label, step] of [[this.minus, -1], [this.plus, 1]]) {
-      label.setInteractive({ useHandCursor: true });
-      label.on("pointerdown", () => this.adjust(step));
+    const plusX = this.pipsX + this.max * (size + 3) + 3;
+    for (const [bx, step] of [[o.x, -1], [plusX, 1]]) {
+      const hit = layer.rect(bx - 4, midY - BTN / 2 - 6, BTN + 8, BTN + 12, 0x000000, 0.001).setInteractive({ useHandCursor: true });
+      hit.on("pointerdown", () => this.adjust(step));
     }
+    this.plusX = plusX;
     if (layer.focus) layer.focus.add(this);
     this.draw();
   }
 
   get width() {
-    return 14 + this.max * (this.pip + 2) + 14;
+    return this.plusX + BTN - this.x;
   }
 
   set(value, silent = false) {
@@ -79,15 +83,27 @@ export class Slider {
 
   draw() {
     const size = this.pip;
-    this.g.clear();
+    const g = this.g;
+    const midY = this.y + size / 2;
+    g.clear();
+    // - and + boxes
+    for (const [bx, plus] of [[this.x, false], [this.plusX, true]]) {
+      g.fillStyle(0x1a2230, 1);
+      g.fillRect(bx, midY - BTN / 2, BTN, BTN);
+      g.lineStyle(1, PALETTE.accent, 1);
+      g.strokeRect(bx, midY - BTN / 2, BTN, BTN);
+      g.fillStyle(PALETTE.accent, 1);
+      g.fillRect(bx + 7, midY - 1, BTN - 14, 3);
+      if (plus) g.fillRect(bx + BTN / 2 - 1, midY - BTN / 2 + 7, 3, BTN - 14);
+    }
     for (let i = 0; i < this.max; i += 1) {
-      const px = this.x + 14 + i * (size + 2);
-      this.g.fillStyle(i < this.value ? this.color : 0x232a36, 1);
-      this.g.fillRect(px, this.y, size, size);
+      const px = this.pipsX + i * (size + 3);
+      g.fillStyle(i < this.value ? this.color : 0x232a36, 1);
+      g.fillRect(px, this.y, size, size);
     }
     if (this.focused && this.max > 0) {
-      this.g.lineStyle(1, 0xffffff, 1);
-      this.g.strokeRect(this.x + 12, this.y - 2, this.max * (size + 2) + 2, size + 4);
+      g.lineStyle(2, 0xffffff, 1);
+      g.strokeRect(this.x - 3, this.y - 4, this.width + 6, size + 8);
     }
   }
 }

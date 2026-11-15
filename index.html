@@ -2,8 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#05060a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta
       name="description"
       content="OUTPOST: Dark Side. Build a Moon base, survive real space weather, and photograph five far-side craters."
@@ -13,6 +16,11 @@
   </head>
   <body>
     <div id="game"></div>
+    <!-- Shown only on a phone held upright: the game is played sideways. -->
+    <div id="rotate" aria-live="polite">
+      <div class="phone" aria-hidden="true"></div>
+      <p>TURN YOUR PHONE</p>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

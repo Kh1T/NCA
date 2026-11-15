@@ -10,7 +10,7 @@ export class Boot extends Phaser.Scene {
   }
 
   preload() {
-    this.add.text(WIDTH / 2, HEIGHT / 2, "LOADING...", textStyle(8, TEXT.muted)).setOrigin(0.5);
+    this.add.text(WIDTH / 2, HEIGHT / 2, "LOADING...", textStyle(16, TEXT.muted)).setOrigin(0.5);
     this.load.on("loaderror", (file) => {
       console.warn(`OUTPOST: could not load ${file.src}`);
     });
@@ -26,7 +26,7 @@ export class Boot extends Phaser.Scene {
   async create() {
     // Wait for the pixel font so the first text is not drawn in a fallback font.
     try {
-      await document.fonts.load('8px "Press Start 2P"');
+      await document.fonts.load('16px "VT323"');
     } catch {
       // Offline or blocked: the monospace fallback is fine.
     }

@@ -2,6 +2,8 @@ import Phaser from "phaser";
 import { PALETTE, TEXT } from "../constants.js";
 import { sfx } from "../ui/sfx.js";
 import { Slider } from "../ui/Slider.js";
+import { drawChips } from "../ui/chips.js";
+import { Layer } from "../ui/kit.js";
 
 const KEY_SPEED = 150;
 const SNAP = 14;
@@ -24,7 +26,7 @@ export class PatchLeak {
     this.timeTotal = ctx.def.timerSec;
     layer.focus.arrowsMove = false;
 
-    this.hint = layer.text(area.x, area.y, "DRAG THE PATCH ONTO THE CRACK! (OR USE ARROW KEYS)", { color: TEXT.accent });
+    this.hint = layer.text(area.x, area.y, "DRAG THE PATCH ONTO THE CRACK!", { color: TEXT.accent });
     const wall = layer.gfx();
     wall.fillStyle(0x2a3344, 1);
     wall.fillRect(area.x, area.y + 16, area.w, 112);
@@ -99,16 +101,21 @@ export class PatchLeak {
     this.quality = Math.max(0.25, 1 - this.elapsed / this.timeTotal);
 
     const { area, layer } = this;
-    this.hint.setText("SEALED! NOW REFILL THE CABIN WITH STORED OXYGEN.").setColor(TEXT.good);
+    this.hint.setText("SEALED! NOW REFILL THE AIR.").setColor(TEXT.good);
     layer.focus.arrowsMove = true;
-    const cover = layer.rect(area.x, area.y + 16, 250, 112, 0x10141c, 0.92);
+    const cover = layer.rect(area.x, area.y + 18, 300, 150, 0x10141c, 0.95);
     cover.setStrokeStyle(1, PALETTE.panelEdge);
-    layer.text(area.x + 8, area.y + 24, "REFILL AMOUNT", { color: TEXT.accent });
-    const info = layer.text(area.x + 8, area.y + 64, "", { wrap: 234 });
-    const show = (value) => info.setText(`Uses ${(value * 0.25).toFixed(2)} oxygen.\nAdds ${(value * 0.25).toFixed(2)} clean air.`);
-    const slider = new Slider(layer, { x: area.x + 8, y: area.y + 42, max: 4, value: 2, color: 0x6cc5ff, pip: 16, onChange: show });
+    let chips = null;
+    const show = (value) => {
+      chips?.destroy();
+      chips = new Layer(this.scene, { depth: 512 });
+      const amount = (value * 0.25).toFixed(2);
+      drawChips(chips, area.x + 10, area.y + 84, [["oxygen", `-${amount}`, TEXT.danger], ["air", `+${amount}`, TEXT.good]]);
+    };
+    this.chips = () => chips;
+    const slider = new Slider(layer, { x: area.x + 10, y: area.y + 36, max: 4, value: 2, color: 0x6cc5ff, pip: 26, onChange: show });
     show(2);
-    const confirm = layer.button(area.x + 190, area.y + 114, "CONFIRM", () => this.finish(slider.value * 0.25), { w: 96 });
+    const confirm = layer.button(area.x + 230, area.y + 140, "OK", () => this.finish(slider.value * 0.25), { w: 110, h: 36, icon: "check" });
     layer.focusFirst(confirm);
     layer.focus.focusItem(slider);
   }
@@ -125,5 +132,7 @@ export class PatchLeak {
     this.done({ quality: this.quality, refill });
   }
 
-  destroy() {}
+  destroy() {
+    this.chips?.()?.destroy();
+  }
 }

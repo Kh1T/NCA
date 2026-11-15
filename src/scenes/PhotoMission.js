@@ -1,13 +1,17 @@
 import Phaser from "phaser";
-import { GROUND_Y, HEIGHT, PALETTE, TEXT, WIDTH, textStyle } from "../constants.js";
+import { GROUND_Y, HEIGHT, PALETTE, TEXT, UI, WIDTH, textStyle } from "../constants.js";
 import { getCraters, preloadCraterImages } from "../data/nasa.js";
 import { Viewfinder } from "../minigames/Viewfinder.js";
 import { PHOTO, clockRate, coldRate } from "../sim/rules.js";
 import { drawRover } from "../ui/art.js";
 import { drawGround, drawHills, drawStars } from "../ui/backdrop.js";
-import { ICON_COLOR } from "../ui/icons.js";
+import { drawChips } from "../ui/chips.js";
+import { infoButton } from "../ui/InfoCard.js";
+import { TouchPad } from "../ui/TouchPad.js";
+import { Cockpit } from "../ui/Cockpit.js";
+import { ICON_COLOR, drawIcon } from "../ui/icons.js";
 import { Layer, clearFocusFor, dialog } from "../ui/kit.js";
-import { sfx } from "../ui/sfx.js";
+import { playMusic, sfx, startEngine } from "../ui/sfx.js";
 
 const WORLD_W = 2140;
 const ROVER_START = 110;
@@ -50,6 +54,7 @@ export class PhotoMission extends Phaser.Scene {
 
     // The far side never sees Earth, so the sky has stars only.
     this.physics.world.setBounds(0, 0, WORLD_W, HEIGHT);
+    playMusic("photo");
     this.cameras.main.setBounds(0, 0, WORLD_W, HEIGHT);
     drawStars(this, { seed: "farside", maxY: GROUND_Y - 10, scroll: 0, count: 140 });
     drawHills(this, { width: WORLD_W, seed: "farside-hills", color: 0x2c2e33, scroll: 0.5 });
@@ -71,7 +76,7 @@ export class PhotoMission extends Phaser.Scene {
     const rocks = this.add.graphics();
     rocks.fillStyle(0x2c2e33, 1);
     for (let x = ROCK_FIELD; x < ROCK_FIELD + 90; x += 18) rocks.fillTriangle(x, GROUND_Y, x + 9, GROUND_Y - 12 - (x % 7), x + 18, GROUND_Y);
-    this.add.text(ROCK_FIELD + 45, GROUND_Y + 8, "TOO ROCKY FOR THE ROVER", textStyle(8, "#16181c")).setOrigin(0.5, 0);
+    this.add.text(ROCK_FIELD + 45, GROUND_Y + 8, "TOO ROCKY FOR THE ROVER", textStyle(16, "#16181c")).setOrigin(0.5, 0);
 
     // Five camera spots, each on a ledge you have to climb.
     const craters = Phaser.Utils.Array.Shuffle([...getCraters(this)]).slice(0, PHOTO.TARGETS);
@@ -85,7 +90,7 @@ export class PhotoMission extends Phaser.Scene {
       ledge(high ? x + 2 : x + 16, topY, 60);
       const spotX = x + 14;
       const g = this.add.graphics();
-      const label = this.add.text(spotX, topY - 44, `PHOTO ${i + 1}`, textStyle(8, TEXT.accent)).setOrigin(0.5, 0);
+      const label = this.add.text(spotX, topY - 44, `PHOTO ${i + 1}`, textStyle(16, TEXT.accent)).setOrigin(0.5, 0);
       const target = { index: i, x: spotX, climbX: x, y: topY - 4, g, label, done: false, crater: craters[i] ?? { name: `Crater ${i + 1}`, nasaId: "none", kidFact: "", credit: "NASA", mission: "", link: null } };
       this.drawSpot(target);
       // Tap or click a flag to walk there and climb up.
@@ -109,23 +114,51 @@ export class PhotoMission extends Phaser.Scene {
     this.cameraSpot = this.add.rectangle(ROVER_START, GROUND_Y - 30, 2, 2, 0, 0);
     this.cameras.main.startFollow(this.cameraSpot, true, 0.12, 0.12, 0, 40);
 
-    this.prompt = this.add.text(0, 0, "", textStyle(8, TEXT.accent, { backgroundColor: "#05060a", padding: { x: 3, y: 2 } })).setOrigin(0.5, 1).setDepth(20);
+    this.prompt = this.add.text(0, 0, "", textStyle(16, TEXT.accent, { backgroundColor: "#05060a", padding: { x: 3, y: 2 } })).setOrigin(0.5, 1).setDepth(20);
     this.prompt.setInteractive({ useHandCursor: true });
     this.prompt.on("pointerdown", () => this.interact());
     this.cold = this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x6cc5ff, 0).setOrigin(0).setScrollFactor(0).setDepth(30);
 
     this.buildHud();
+    this.pad = new TouchPad(this, { y: 322, depth: 90 });
+    // The view from the driver's seat while in the rover.
+    this.cockpit = new Cockpit(this, { x: 454, y: 62, w: 180, h: 112 });
+    // The rover hums louder and higher as it speeds up.
+    this.engine = startEngine();
+    this.events.once("shutdown", () => this.engine?.stop());
     this.keys = this.input.keyboard.addKeys({ left: "LEFT", right: "RIGHT", up: "UP", a: "A", d: "D", w: "W", space: "SPACE", e: "E", enter: "ENTER", h: "H" });
     this.input.on("pointerdown", (pointer, over) => {
       if (over.length === 0 && pointer.y > 60 && !this.paused) this.walkTarget = { x: pointer.worldX, climbTo: null };
     });
 
-    dialog(this, {
-      title: "PHASE 3: THE CRATER PHOTO RACE",
-      body: `You have ${PHOTO.TIME_SEC} seconds. The far side is extremely cold!\n\nDRIVE: arrow keys. E: get out or in.\nOn foot, climb to each PHOTO flag and press E.\nYour suit loses heat faster the farther you walk. Warm up inside the rover.\n\nTake up to 5 photos, then be INSIDE the rover before time runs out. H in the rover: head home early.`,
-      buttons: [{ label: "GO!", onClick: () => { this.paused = false; } }],
-      width: 480,
+    this.showIntro();
+  }
+
+  /** Three picture panels instead of a page of rules. */
+  showIntro() {
+    const L = new Layer(this, { depth: 300, fixed: true, keys: true });
+    L.dim(0.75);
+    L.panel(70, 40, 500, 280, { edge: PALETTE.accent, alpha: 1 });
+    L.text(WIDTH / 2, 48, "PHOTO RACE!", { size: UI.title, color: TEXT.accent, origin: 0.5 });
+    infoButton(L, 544, 64, "place.farside", { focus: false });
+    const steps = [["rover", "DRIVE TO A FLAG"], ["camera", "CLIMB UP, SNAP!"], ["cold", "BACK BEFORE YOU FREEZE"]];
+    const g = L.gfx();
+    steps.forEach(([icon, line], i) => {
+      const cx = 160 + i * 160;
+      g.fillStyle(0x0b1018, 1);
+      g.fillRect(cx - 64, 92, 128, 108);
+      drawIcon(g, icon, cx - 30, 106, 5);
+      g.fillStyle(PALETTE.accent, 1);
+      g.fillCircle(cx - 52, 104, 10);
+      L.text(cx - 52, 104, String(i + 1), { origin: [0.5, 0.5], color: "#05060a" });
+      L.text(cx, 210, line, { origin: 0.5, wrap: 140, align: "center" });
     });
+    drawChips(L, 168, 252, [["clock", `${PHOTO.TIME_SEC} SECONDS`], ["camera", `${PHOTO.TARGETS} PHOTOS`]]);
+    const go = L.button(WIDTH / 2, 294, "GO!", () => {
+      L.destroy();
+      this.paused = false;
+    }, { w: 150, h: 36, key: "ENTER", icon: "play" });
+    L.focusFirst(go);
   }
 
   drawSpot(target) {
@@ -151,18 +184,23 @@ export class PhotoMission extends Phaser.Scene {
   }
 
   buildHud() {
-    const H = (this.hud = new Layer(this, { depth: 100, fixed: true }));
-    H.rect(0, 0, WIDTH, 44, 0x05060a, 0.92);
-    H.text(5, 4, "TIME", { color: TEXT.muted });
-    H.text(170, 4, "SUIT HEAT", { color: TEXT.muted });
-    H.text(335, 4, "ROVER", { color: TEXT.muted });
+    const H = (this.hud = new Layer(this, { depth: 100, fixed: true, keys: true }));
+    H.rect(0, 0, WIDTH, 58, 0x05060a, 0.92);
+    const icons = H.gfx();
+    drawIcon(icons, "clock", 6, 8, 1.4);
+    drawIcon(icons, "thermo", 170, 8, 1.4);
+    drawIcon(icons, "battery", 334, 8, 1.4);
+    drawIcon(icons, "camera", 500, 8, 1.4);
     this.bars = H.gfx();
-    this.timeText = H.text(155, 4, "", { origin: 1 });
-    this.heatText = H.text(320, 4, "", { origin: 1 });
-    this.batteryText = H.text(485, 4, "", { origin: 1 });
-    this.photoText = H.text(635, 4, "", { origin: 1, color: TEXT.accent });
-    this.doseText = H.text(635, 16, "", { origin: 1, color: TEXT.muted });
-    this.guide = H.text(5, 31, "", { color: TEXT.good });
+    this.timeText = H.text(160, 2, "", { origin: 1, size: UI.big });
+    this.heatText = H.text(324, 2, "", { origin: 1, size: UI.big });
+    this.batteryText = H.text(488, 2, "", { origin: 1, size: UI.big });
+    this.photoText = H.text(524, 2, "", { color: TEXT.accent, size: UI.big });
+    drawIcon(icons, "dose", 574, 8, 1.2);
+    this.doseText = H.text(634, 4, "", { origin: 1, color: TEXT.muted });
+    this.guide = H.text(6, 34, "", { color: TEXT.good });
+    // Head home: a button as well as the H key, so touch players can use it.
+    this.homeButton = H.button(584, 196, "HOME", () => this.headHome(), { w: 100, h: 34, icon: "home" });
   }
 
   updateHud() {
@@ -170,32 +208,34 @@ export class PhotoMission extends Phaser.Scene {
     g.clear();
     const bar = (x, share, color, danger) => {
       g.fillStyle(0x232a36, 1);
-      g.fillRect(x, 16, 150, 8);
+      g.fillRect(x, 26, 132, 7);
       g.fillStyle(danger ? PALETTE.danger : color, 1);
-      g.fillRect(x, 16, Math.round(150 * Phaser.Math.Clamp(share, 0, 1)), 8);
+      g.fillRect(x, 26, Math.round(132 * Phaser.Math.Clamp(share, 0, 1)), 7);
       if (danger) {
         g.fillStyle(0x05060a, 1);
-        for (let nx = x + 3; nx < x + 150 * share; nx += 6) g.fillRect(nx, 16, 2, 8);
+        for (let nx = x + 3; nx < x + 132 * share; nx += 6) g.fillRect(nx, 26, 2, 7);
       }
     };
-    bar(5, this.timeLeft / PHOTO.TIME_SEC, PALETTE.accent, this.timeLeft < 30);
-    bar(170, this.heat / PHOTO.SUIT_HEAT, 0xff8c42, this.heat < 25);
-    bar(335, this.battery / 100, ICON_COLOR.power, this.battery < 10);
+    bar(28, this.timeLeft / PHOTO.TIME_SEC, PALETTE.accent, this.timeLeft < 30);
+    bar(192, this.heat / PHOTO.SUIT_HEAT, 0xff8c42, this.heat < 25);
+    bar(356, this.battery / 100, ICON_COLOR.power, this.battery < 10);
     this.timeText.setText(`${Math.ceil(this.timeLeft)}s`);
     this.heatText.setText(this.heat <= 0 ? "COLD!" : `${Math.round(this.heat)}`);
     this.batteryText.setText(`${Math.round(this.battery)}%`);
     const state = this.state;
-    this.photoText.setText(`PHOTOS ${state.photosTaken}/${PHOTO.TARGETS}`);
-    this.doseText.setText(`DOSE ${state.doseMSv.toFixed(1)}/${state.doseLimit}`);
+    this.photoText.setText(`${state.photosTaken}/${PHOTO.TARGETS}`);
+    this.doseText.setText(`${state.doseMSv.toFixed(1)}`);
+    this.homeButton.setVisible(this.inRover && !this.ended);
+    this.cockpit?.show(this.inRover && !this.ended);
 
     let guide;
     if (this.inRover && state.photosTaken >= PHOTO.TARGETS) guide = "All 5 photos! You made it back.";
-    else if (this.inRover && this.roverX > ROCK_FIELD - 80) guide = "The rover stops here. Go on foot (E), or press H to head home.";
-    else if (this.inRover) guide = "Drive to a PHOTO flag, then press E to get out. H: head home.";
-    else if (this.heat <= 0) guide = "Your suit is COLD! The clock is running fast. Get to the rover!";
-    else if (this.heat < 35) guide = "Suit heat is low. Warm up inside the rover.";
-    else if (state.photosTaken >= PHOTO.TARGETS) guide = "All 5 photos taken! Get back inside the rover (E).";
-    else guide = "Climb to a PHOTO flag and press E. Stay close to the rover to stay warm.";
+    else if (this.inRover && this.roverX > ROCK_FIELD - 80) guide = "Too rocky! Get out (E) or head HOME.";
+    else if (this.inRover) guide = "Drive to a flag. Press E to get out.";
+    else if (this.heat <= 0) guide = "Suit too cold! Get back to the rover!";
+    else if (this.heat < 35) guide = "Suit heat is low. Warm up in the rover.";
+    else if (state.photosTaken >= PHOTO.TARGETS) guide = "All 5 photos! Get back in the rover (E).";
+    else guide = "Climb to a flag and press E. Stay near the rover.";
     this.guide.setText(guide).setColor(this.heat < 35 && !this.inRover ? TEXT.danger : TEXT.good);
     this.cold.setAlpha(this.inRover ? 0 : Phaser.Math.Clamp((40 - this.heat) / 40, 0, 1) * 0.28);
   }
@@ -219,6 +259,7 @@ export class PhotoMission extends Phaser.Scene {
     sfx("click");
     if (near === "exit") {
       this.inRover = false;
+      this.engine?.setSpeed(-1);
       this.player.body.enable = true;
       this.player.setPosition(this.exitSpot(), GROUND_Y - 24).setVisible(true).setVelocity(0, 0);
       this.cameras.main.startFollow(this.player, true, 0.12, 0.12, 0, 40);
@@ -237,6 +278,7 @@ export class PhotoMission extends Phaser.Scene {
 
   enterRover() {
     this.inRover = true;
+    this.engine?.setSpeed(0);
     this.player.setVisible(false).setVelocity(0, 0);
     this.player.body.enable = false;
     this.cameraSpot.setPosition(this.roverX, GROUND_Y - 30);
@@ -272,10 +314,11 @@ export class PhotoMission extends Phaser.Scene {
     this.paused = true;
     dialog(this, {
       title: "HEAD HOME?",
-      body: `You have ${taken} of ${PHOTO.TARGETS} photos. Heading home now is safe, but you will not get the rest.`,
+      icon: "home",
+      body: `You have ${taken} of ${PHOTO.TARGETS} photos.`,
       buttons: [
         { label: "KEEP GOING", onClick: () => { this.paused = false; } },
-        { label: "HEAD HOME", onClick: () => this.finish("partial", "returned") },
+        { label: "GO HOME", icon: "home", onClick: () => this.finish("partial", "returned") },
       ],
     });
   }
@@ -283,6 +326,9 @@ export class PhotoMission extends Phaser.Scene {
   finish(kind, cause) {
     if (this.ended) return;
     this.ended = true;
+    this.engine?.stop();
+    this.engine = null;
+    this.cockpit?.show(false);
     const state = this.state;
     state.doseMSv = Math.round(state.doseMSv * 100) / 100;
     state.outcome = { kind, cause };
@@ -297,10 +343,9 @@ export class PhotoMission extends Phaser.Scene {
     this.paused = true;
     dialog(this, {
       title: kind === "success" ? "ALL 5 PHOTOS!" : "SAFE IN THE ROVER",
-      body: kind === "success"
-        ? "You are back inside the rover with every photo. Sending the report to Mission Control through the relay satellite..."
-        : `You are safe with ${state.photosTaken} photo${state.photosTaken === 1 ? "" : "s"}. Sending the report to Mission Control through the relay satellite...`,
-      buttons: [{ label: "SEE DEBRIEF", onClick: () => this.scene.start("Debrief") }],
+      icon: kind === "success" ? "medal" : "rover",
+      body: kind === "success" ? "Back in the rover with every photo!" : `Safe with ${state.photosTaken} photo${state.photosTaken === 1 ? "" : "s"}.`,
+      buttons: [{ label: "RESULTS", icon: "play", onClick: () => this.scene.start("Debrief") }],
     });
   }
 
@@ -313,6 +358,8 @@ export class PhotoMission extends Phaser.Scene {
     if (this.ended || (this.paused && !framing)) {
       this.prompt.setVisible(false);
       for (const key of [k.e, k.enter, k.h, k.up, k.w, k.space]) Phaser.Input.Keyboard.JustDown(key);
+      this.pad?.takeJump();
+      this.pad?.takeUse();
       if (!this.inRover) this.player.setVelocityX(0);
       this.wasPaused = true;
       return;
@@ -350,7 +397,9 @@ export class PhotoMission extends Phaser.Scene {
     let direction = 0;
     if (k.left.isDown || k.a.isDown) direction = -1;
     else if (k.right.isDown || k.d.isDown) direction = 1;
-    let jump = Phaser.Input.Keyboard.JustDown(k.up) || Phaser.Input.Keyboard.JustDown(k.w) || Phaser.Input.Keyboard.JustDown(k.space);
+    else direction = this.pad.direction;
+    let jump = Phaser.Input.Keyboard.JustDown(k.up) || Phaser.Input.Keyboard.JustDown(k.w) || Phaser.Input.Keyboard.JustDown(k.space) || this.pad.takeJump();
+    const use = this.pad.takeUse();
     if (direction !== 0 || jump) this.walkTarget = null;
 
     if (this.inRover) {
@@ -359,6 +408,7 @@ export class PhotoMission extends Phaser.Scene {
         if (Math.abs(dx) < 8) this.walkTarget = null;
         else direction = Math.sign(dx);
       }
+      this.engine?.setSpeed(direction !== 0 && this.battery > 0 ? 1 : 0);
       if (direction !== 0 && this.battery > 0) {
         const next = Phaser.Math.Clamp(this.roverX + direction * DRIVE * dt, 40, ROCK_FIELD - 30);
         this.battery = Math.max(0, this.battery - (Math.abs(next - this.roverX) / 100) * PHOTO.ROVER_COST_PER_100PX);
@@ -367,7 +417,14 @@ export class PhotoMission extends Phaser.Scene {
         this.cameraSpot.x = next;
         this.drawRover();
       }
-      this.prompt.setText("E: GET OUT").setPosition(this.roverX, GROUND_Y - 44).setVisible(true);
+      this.cockpit.update(dt, {
+        steer: direction,
+        moving: direction !== 0 && this.battery > 0,
+        battery: this.battery / 100,
+        heat: this.heat / PHOTO.SUIT_HEAT,
+        time: this.timeLeft / PHOTO.TIME_SEC,
+      });
+      this.prompt.setText(this.registry.get("touchUsed") ? "TAP: GET OUT" : "E: GET OUT").setPosition(this.roverX, GROUND_Y - 44).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(k.h)) this.headHome();
     } else {
       const body = this.player.body;
@@ -391,12 +448,13 @@ export class PhotoMission extends Phaser.Scene {
       }
       const near = this.nearby();
       if (near) {
-        const label = near === "enter" ? "E: GET IN THE ROVER" : "E: TAKE PHOTO";
+        const key = this.registry.get("touchUsed") ? "TAP" : "E";
+        const label = near === "enter" ? `${key}: GET IN THE ROVER` : `${key}: TAKE PHOTO`;
         this.prompt.setText(label).setPosition(this.player.x, this.player.y - 30).setVisible(true);
       } else {
         this.prompt.setVisible(false);
       }
     }
-    if (Phaser.Input.Keyboard.JustDown(k.e) || Phaser.Input.Keyboard.JustDown(k.enter)) this.interact();
+    if (Phaser.Input.Keyboard.JustDown(k.e) || Phaser.Input.Keyboard.JustDown(k.enter) || use) this.interact();
   }
 }
