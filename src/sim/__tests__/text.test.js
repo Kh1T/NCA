@@ -1,4 +1,4 @@
-// "Max ~12 words per on-screen message": every player-facing line that comes
+﻿// "Max ~12 words per on-screen message": every player-facing line that comes
 // from the rules engine or the content files is checked here. The Science
 // Sources pages (for teachers and parents) and the glossary are exempt from
 // the 12-word rule; glossary definitions get a looser 20-word limit.
@@ -10,13 +10,13 @@ import { GLOSSARY, glossaryEntry } from "../../data/glossary.js";
 import { INFO } from "../../data/info.js";
 import { CORE, ITEMS, packWarnings, startBuild } from "../buildings.js";
 import { ALERTS, alertsForToday, applyAlertResult, buildSchedule, onAlertStart } from "../events.js";
-import { advanceDay, autoBuild, autoPlan, guideLine } from "../rules.js";
+import { ACTIONS, advanceDay, autoBuild, autoPlan, checklist, dayCard, guideLine } from "../rules.js";
 import { causeChain, retryHints } from "../scoring.js";
 import { createState } from "../state.js";
 
 const MAX = 12;
 const words = (text) => String(text).trim().split(/\s+/).filter(Boolean).length;
-const FULL = { solar: 1, water: 1, oxygen: 1, air: 1, greenhouse: 1, shield: 1, rover: 1, spares: 1 };
+const FULL = { solar: 1, oxygen: 1, air: 1, greenhouse: 1, shield: 1, rover: 1, spares: 1, battery: 1 };
 const donki = (id) => JSON.parse(fs.readFileSync(path.resolve("public/data/donki", `${id}.json`), "utf8"));
 
 function expectShort(lines, max = MAX) {
@@ -72,10 +72,13 @@ describe("on-screen text stays short", () => {
     const lines = [];
     for (const dateId of ["busy", "storm"]) {
       const file = donki(dateId);
-      const schedule = buildSchedule({ donki: file, missionDate: file.startDate, totalDays: 9, weatherDeck: ["night", "leak", "dust", "temp", "plant", "comms", "meteor"], seed: 5 });
-      let state = createState({ packed: FULL, missionDate: file.startDate, totalDays: 9, seed: 5, schedule });
-      while (!state.outcome && state.day <= 9) {
+      const schedule = buildSchedule({ donki: file, missionDate: file.startDate, totalDays: 9, weatherDeck: ["leak", "dust", "temp", "plant", "comms", "meteor"], seed: 5 });
+      let state = createState({ packed: FULL, missionDate: file.startDate, totalDays: 9, nightDays: 3, seed: 5, schedule });
+      while (!state.outcome) {
         autoBuild(state);
+        const card = dayCard(state);
+        lines.push(card.title, ...card.options.map((id) => ACTIONS[id].label));
+        lines.push(...checklist(state).map((i) => i.label), guideLine(state).text);
         const today = alertsForToday(state);
         lines.push(...today.notices.map((n) => n.text));
         for (const event of today.alerts) {

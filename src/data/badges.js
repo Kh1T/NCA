@@ -14,7 +14,7 @@ const finished = (state) => Boolean(state.outcome) && outcomeKind(state) !== "ev
 export const BADGES = [
   { id: "first-build", icon: "build", title: "First Build", how: "Finish your first building.",
     test: ({ state }) => state.log.some((e) => e.type === "build-done") },
-  { id: "base-builder", icon: "home", title: "Base Builder", how: "Finish all six buildings.",
+  { id: "base-builder", icon: "home", title: "Base Builder", how: "Finish all five base buildings.",
     test: ({ state }) => CORE.every((id) => built(state, id)) },
   { id: "rover-ready", icon: "rover", title: "Rover Ready", how: "Build the rover.",
     test: ({ state }) => built(state, "rover") },
@@ -40,10 +40,10 @@ export const BADGES = [
     test: ({ state, when }) => when === "end" && won(state) && state.scenarioId === "gannon-2024" },
   { id: "up-to-date", icon: "calendar", title: "Up To Date", how: "Win the This Month mission.",
     test: ({ state, when }) => when === "end" && won(state) && state.scenarioId === "recent" },
-  { id: "custom-creator", icon: "question", title: "Custom Creator", how: "Finish a custom mission.",
-    test: ({ state, when }) => when === "end" && finished(state) && state.mode === "custom" },
-  { id: "hard-mode", icon: "medal", title: "Hard Mode", how: "Win on HARD.",
-    test: ({ state, when }) => when === "end" && won(state) && state.difficulty === "hard" },
+  { id: "night-owl", icon: "moon", title: "Night Owl", how: "Get through the night with power left.",
+    test: ({ state, when }) => when === "end" && finished(state) && (state.stats?.nightPowerOut ?? 0) === 0 },
+  { id: "smart-chief", icon: "medal", title: "Smart Chief", how: "Make the best choice every day.",
+    test: ({ state, when }) => when === "end" && won(state) && (state.decisions ?? []).length > 0 && state.decisions.every((d) => d.good) },
 ];
 
 /** Badges earned right now that are not already unlocked. */

@@ -1,5 +1,5 @@
-import Phaser from "phaser";
-import { CommsWait, HeatSlider, NightSwitches, PlantBalance } from "../minigames/Controls.js";
+﻿import Phaser from "phaser";
+import { CommsWait, HeatSlider, PlantBalance } from "../minigames/Controls.js";
 import { DragToShelter } from "../minigames/DragToShelter.js";
 import { DustWipe } from "../minigames/DustWipe.js";
 import { PatchLeak } from "../minigames/PatchLeak.js";
@@ -9,7 +9,7 @@ import { AlertCard, CARD } from "../ui/AlertCard.js";
 import { costChips } from "../ui/chips.js";
 import { clearFocusFor } from "../ui/kit.js";
 
-const GAMES = { DragToShelter, PatchLeak, DustWipe, RepairBot, NightSwitches, HeatSlider, PlantBalance, CommsWait };
+const GAMES = { DragToShelter, PatchLeak, DustWipe, RepairBot, HeatSlider, PlantBalance, CommsWait };
 
 /** An icon for each choice button. */
 const OPTION_ICON = {
@@ -71,8 +71,7 @@ export class Alert extends Phaser.Scene {
   /** Two options side by side, each with its cost as icons. */
   showChoices() {
     const options = this.def.options.map((option) => {
-      // A particle storm keeps everyone inside all day.
-      const chips = option.id === "shelter" && this.event.level === "SEP" ? [["clock", "-1 DAY"]] : costChips(option.cost);
+      const chips = costChips(option.cost);
       return {
         label: option.label,
         icon: OPTION_ICON[option.id],

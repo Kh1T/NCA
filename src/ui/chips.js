@@ -1,4 +1,4 @@
-import { TEXT, UI } from "../constants.js";
+﻿import { TEXT, UI } from "../constants.js";
 import { drawIcon } from "./icons.js";
 
 /** Which icon and short value show each kind of alert cost. */
@@ -53,14 +53,12 @@ export function drawChips(layer, x, y, chips, o = {}) {
 
 /** What each building makes and needs, as [icon, label] chips. */
 export const ITEM_MAKES = {
-  solar: [["power", "POWER"]], water: [["water", "WATER"]], oxygen: [["oxygen", "OXYGEN"]], air: [["air", "CLEAN AIR"]],
-  greenhouse: [["food", "FOOD"]], shield: [["shield", "SAFER WORK"]], rover: [["camera", "PHOTOS"]], antenna: [["science", "x2 SCIENCE"]],
+  solar: [["power", "POWER"]], oxygen: [["oxygen", "OXYGEN"]], air: [["air", "CLEAN AIR"]],
+  greenhouse: [["food", "FOOD"]], shield: [["shield", "SAFER WORK"]], rover: [["camera", "PHOTOS"]],
   battery: [["battery", "+8 STORAGE"]], spares: [["wrench", "1 QUICK FIX"]], foodpack: [["food", "+2 DAYS"]],
 };
 export const ITEM_NEEDS = {
-  solar: [["sun", "SUN"]], water: [["power", "2"]], oxygen: [["power", "2"], ["water", "WATER"]], air: [["power", "1"]],
-  greenhouse: [["power", "2"], ["water", "WATER"]], shield: [["build", "TIME"]], rover: [["check", "6 BUILDINGS"]],
-  antenna: [["science", "SCIENCE POWER"]],
+  solar: [["sun", "SUN"]], oxygen: [["power", "2"], ["water", "A LITTLE"]], air: [["power", "1"]],
+  greenhouse: [["power", "2"], ["water", "A LITTLE"]], shield: [["build", "TIME"]], rover: [["build", "TIME"]],
   battery: [["check", "NOTHING"]], spares: [["check", "NOTHING"]], foodpack: [["check", "NOTHING"]],
 };
-

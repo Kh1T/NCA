@@ -1,9 +1,9 @@
-// "Did you know?" cards, opened only when the player taps an "i" button.
+﻿// "Did you know?" cards, opened only when the player taps an "i" button.
 // Each card: a big picture, a title, 1–3 short lines (12 words or fewer each),
 // and an optional glossary term for READ MORE.
 //
 // art: { icon } draws a big pixel icon, { building } draws a finished building,
-//      { ship: true }, { rover: true } or { ceres: true } draw those pictures.
+//      { ship: true } or { rover: true } draw those pictures.
 
 export const INFO = {
   // ---- HUD meters ----
@@ -19,7 +19,7 @@ export const INFO = {
   },
   "meter.air": {
     title: "Clean air", art: { icon: "air" },
-    lines: ["Breathing out makes air stale.", "The air recycler cleans it.", "Clean air runs out first!"],
+    lines: ["Breathing out makes air stale.", "The air cleaner cleans it.", "Clean air runs out first!"],
     glossary: "life-support",
   },
   "meter.food": {
@@ -29,7 +29,7 @@ export const INFO = {
   },
   "meter.water": {
     title: "Water", art: { icon: "water" },
-    lines: ["The crew drinks it.", "Oxygen and plants need it too."],
+    lines: ["The crew drinks it. Plants and oxygen use it.", "The ship recycles water using power."],
     glossary: "water-ice",
   },
   "meter.shield": {
@@ -44,12 +44,12 @@ export const INFO = {
   },
   "meter.science": {
     title: "Science", art: { icon: "science" },
-    lines: ["Points for discoveries.", "Explore or power the lab to earn them."],
+    lines: ["Points for discoveries.", "Good photos earn the most."],
     glossary: "science",
   },
   "meter.day": {
     title: "Mission days", art: { icon: "calendar" },
-    lines: ["Each day the crew works, eats and breathes.", "Survive to the last day!"],
+    lines: ["Each day you make one choice.", "The last days are the lunar night."],
   },
 
   // ---- Buildings and kits ----
@@ -58,18 +58,13 @@ export const INFO = {
     lines: ["Turns sunlight into power.", "No sun means no power!"],
     glossary: "solar-panel",
   },
-  "item.water": {
-    title: "Water extractor", art: { building: "water" },
-    lines: ["Digs ice out of moon dirt.", "Melts it into water."],
-    glossary: "water-ice",
-  },
   "item.oxygen": {
     title: "Oxygen maker", art: { building: "oxygen" },
     lines: ["Splits water into oxygen and hydrogen.", "No water means no oxygen."],
     glossary: "oxygen",
   },
   "item.air": {
-    title: "Air recycler", art: { building: "air" },
+    title: "Air cleaner", art: { building: "air" },
     lines: ["Scrubs used breath out of the air.", "Space stations use one every day."],
     glossary: "life-support",
   },
@@ -87,11 +82,6 @@ export const INFO = {
     title: "Rover", art: { rover: true },
     lines: ["A car for the Moon.", "It drives you to the far side craters."],
     glossary: "rover",
-  },
-  "item.antenna": {
-    title: "Big antenna", art: { building: "antenna" },
-    lines: ["Talks to Earth faster.", "Doubles the science you send home."],
-    glossary: "satellite",
   },
   "item.battery": {
     title: "Battery pack", art: { icon: "battery" },
@@ -117,11 +107,6 @@ export const INFO = {
     title: "Particle storm", art: { icon: "dose" },
     lines: ["Super-fast bits of the Sun fly out.", "The strongest kind of space radiation."],
     glossary: "particle",
-  },
-  "alert.night": {
-    title: "Long shadow", art: { icon: "moon" },
-    lines: ["A Moon night lasts about 14 Earth days!", "No sunlight means no solar power."],
-    glossary: "lunar-night",
   },
   "alert.meteor": {
     title: "Micrometeorite", art: { icon: "rock" },
@@ -165,18 +150,30 @@ export const INFO = {
     lines: ["Holes blasted out by space rocks.", "Some are older than the dinosaurs!"],
     glossary: "crater",
   },
-  "mission.real": {
-    title: "Real science", art: { icon: "sun" },
-    lines: ["These dates really happened.", "The Sun's storms come from NASA records."],
+  "mission.calm": {
+    title: "Calm Sun", art: { icon: "moon" },
+    lines: ["December 2019: the Sun was very quiet.", "Few storms. A good first mission!"],
+    glossary: "sun",
+  },
+  "mission.busy": {
+    title: "Busy Sun", art: { icon: "sun" },
+    lines: ["July 2021: the Sun woke up.", "Real flares from NASA records will hit."],
+    glossary: "solar-flare",
+  },
+  "mission.recent": {
+    title: "This Month", art: { icon: "calendar" },
+    lines: ["The newest space weather we saved.", "Real NASA records from recent days."],
     glossary: "space-weather",
   },
-  "mission.custom": {
-    title: "Custom mission", art: { icon: "build" },
-    lines: ["You choose the dangers.", "The solar storms are still real dates."],
+  "mission.storm": {
+    title: "Solar Storm!", art: { icon: "dose" },
+    lines: ["May 2024: the biggest storm in 20 years.", "Auroras were seen far from the poles!", "The hardest mission, with a long night."],
+    glossary: "aurora-borealis",
   },
-  "mission.ceres": {
-    title: "Ceres", art: { ceres: true },
-    lines: ["Your robot helper.", "Ceres watches the base and gives tips."],
+  "meter.night": {
+    title: "Lunar night", art: { icon: "moon" },
+    lines: ["A real Moon night lasts about 14 Earth days!", "No sun means no solar power.", "Charge the battery before dark."],
+    glossary: "lunar-night",
   },
 };
 

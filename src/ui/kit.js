@@ -210,10 +210,14 @@ export class Layer {
       },
       setLabel(value) {
         text.setText(value);
+        // The icon sits left of the label, so it moves when the label changes.
+        if (iconG) this.setIcon(this.iconId);
         return this;
       },
+      iconId: o.icon,
       setIcon(id) {
         if (!iconG) return this;
+        this.iconId = id;
         const scale = h >= 30 ? 1.5 : 1;
         iconG.clear();
         const left = text.text ? x + iconW / 2 - text.width / 2 - 6 - 12 * scale : x - 6 * scale;

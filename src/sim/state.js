@@ -3,8 +3,6 @@
 import { ITEMS } from "./buildings.js";
 import { C } from "./rules.js";
 
-/** @typedef {'spaceship'|'hab'|'shelter'|'outside'} CrewLocation */
-
 /** Small seeded random generator. The seed lives in state so runs can be replayed. */
 export function rand(state) {
   state.rngState = (state.rngState + 0x6d2b79f5) | 0;
@@ -20,9 +18,10 @@ export function pick(state, list) {
 /**
  * @param {object} options
  * @param {Record<string, number>} options.packed  item id -> how many were packed
- * @param {string[]} [options.weatherDeck]         alert ids the player allowed
+ * @param {string[]} [options.weatherDeck]         alert ids that can happen
  * @param {string} [options.missionDate]           ISO date, drives real events
  * @param {number} [options.totalDays]
+ * @param {number} [options.nightDays]             the lunar night: the last N days
  * @param {number} [options.seed]
  * @param {Record<number, object[]>} [options.schedule]  day -> events (see events.js)
  */
@@ -31,6 +30,7 @@ export function createState({
   weatherDeck = [],
   missionDate = "2019-12-01",
   totalDays = 7,
+  nightDays = 2,
   seed = 1,
   schedule = {},
   dateLabel = "Calm Sun",
@@ -51,11 +51,14 @@ export function createState({
 
   const batteries = packed.battery ?? 0;
   const foodpacks = packed.foodpack ?? 0;
+  const nights = Math.max(0, Math.min(totalDays - 1, nightDays));
 
   return {
-    phase: 1, // 1 build, 2 rover, 3 photo race
     day: 1,
     totalDays,
+    // The lunar night covers the last `nights` days of the mission.
+    nightStart: totalDays - nights + 1,
+    nightDays: nights,
     missionDate,
     dateLabel,
     power: C.START.power + batteries * 4,
@@ -64,9 +67,7 @@ export function createState({
     air: C.START.air,
     food: C.START.food + foodpacks * 2,
     water: C.START.water, // all four are crew-days of supply
-    shielding: "unlimited", // unlimited inside the ship; wallLevel covers work outside
-    wallLevel: 0, // 0 none, 1 built, up to 3 with shield power
-    wallWork: 0,
+    wallLevel: 0, // 0 none, 1 shield wall built
     doseMSv: 0,
     doseLimit: C.DOSE_LIMIT,
     science: 0,
@@ -78,9 +79,6 @@ export function createState({
     effects: {
       dust: false,
       leak: false,
-      nightDaysLeft: 0,
-      nightGreenhouseOff: false,
-      nightBuildOff: false,
       plantHealth: 1,
       plantSickDays: 0,
     },
@@ -92,7 +90,9 @@ export function createState({
     schedule,
     photosTaken: 0,
     photos: [], // { name, stars }
-    roverBattery: 0,
+    spotsDone: [false, false, false, false, false], // which far-side photo spots are done
+    trips: 0,
+    decisions: [], // { day, card, option, best }: the debrief's "good calls"
     outcome: null, // null while playing, else { kind, cause }
     stats: {
       daysSurvived: 0,
@@ -103,6 +103,7 @@ export function createState({
       powerShortDays: 0,
       foodGrown: 0,
       buildDelays: 0,
+      nightPowerOut: 0,
     },
     rngState: seed | 0,
     log: [], // feeds the debrief

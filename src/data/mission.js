@@ -9,8 +9,8 @@ import { SCENARIOS, missionFromScenario, scenarioById } from "./scenarios.js";
 
 export function defaultMission() {
   return {
-    ...missionFromScenario(SCENARIOS[1], "medium"),
-    packed: {},
+    ...missionFromScenario(SCENARIOS[0]),
+    packed: null, // null = the starter pack
     roll: Math.random(),
   };
 }
@@ -27,17 +27,22 @@ export function getMission(scene) {
 /** Replace the scenario settings but keep the last pack, so a retry is quick. */
 export function setMission(scene, settings) {
   const old = scene.registry.get("mission");
-  const mission = { ...settings, packed: old?.packed ?? {}, roll: Math.random() };
+  const mission = { ...settings, packed: old?.packed ?? null, roll: Math.random() };
   scene.registry.set("mission", mission);
   return mission;
 }
 
 export function budgetOf(mission) {
-  return mission.budget ?? BUDGETS[mission.difficulty] ?? BUDGETS.normal;
+  return mission.budget ?? BUDGETS.normal;
 }
 
 export function scenarioOf(mission) {
   return scenarioById(mission.scenarioId);
+}
+
+/** The pack that will fly: the player's own, or the starter pack. */
+export function packOf(mission) {
+  return mission.packed && Object.keys(mission.packed).length > 0 ? mission.packed : starterPlan(budgetOf(mission));
 }
 
 /** Build the starting state from the mission choices and the cached NASA data. */
@@ -50,21 +55,20 @@ export function startMission(scene) {
   const schedule = buildSchedule({
     donki: file, missionDate, totalDays: mission.totalDays, weatherDeck: deck, seed, maxEvents: mission.maxEvents ?? null,
   });
-  const packed = Object.keys(mission.packed ?? {}).length > 0 ? mission.packed : starterPlan(budgetOf(mission));
   const state = createState({
-    packed,
+    packed: packOf(mission),
     weatherDeck: deck,
     missionDate,
     totalDays: mission.totalDays,
+    nightDays: mission.nightDays ?? 2,
     seed,
     schedule,
     dateLabel: DATE_PRESETS.find((p) => p.id === mission.dateId)?.label ?? mission.dateId,
   });
   state.dateId = mission.dateId;
   state.scenarioId = mission.scenarioId;
-  state.difficulty = mission.difficulty;
-  state.mode = mission.mode ?? "real";
   scene.registry.set("state", state);
+  scene.registry.set("hintsShown", []);
   return state;
 }
 

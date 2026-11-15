@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+﻿import Phaser from "phaser";
 import "@fontsource/vt323";
 import "./game.css";
 import { HEIGHT, PALETTE, WIDTH } from "./constants.js";
@@ -6,7 +6,7 @@ import { Alert } from "./scenes/Alert.js";
 import { Blueprints } from "./scenes/Blueprints.js";
 import { Badges } from "./scenes/Badges.js";
 import { Boot } from "./scenes/Boot.js";
-import { Briefing } from "./scenes/Briefing.js";
+import { HowTo } from "./scenes/HowTo.js";
 import { Credits } from "./scenes/Credits.js";
 import { Debrief } from "./scenes/Debrief.js";
 import { Evacuated } from "./scenes/Evacuated.js";
@@ -15,11 +15,11 @@ import { Landing } from "./scenes/Landing.js";
 import { Outpost } from "./scenes/Outpost.js";
 import { OutpostUi } from "./scenes/OutpostUi.js";
 import { PhotoMission } from "./scenes/PhotoMission.js";
-import { RoverBuild } from "./scenes/RoverBuild.js";
 import { Scenario } from "./scenes/Scenario.js";
 import { Story } from "./scenes/Story.js";
 import { Title } from "./scenes/Title.js";
 import { UiTest } from "./scenes/UiTest.js";
+import { findOverflow } from "./utils/overflow.js";
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -43,7 +43,7 @@ const game = new Phaser.Game({
     arcade: { gravity: { y: 260 }, debug: false },
   },
   scene: [
-    Boot, Title, Story, Scenario, Briefing, Blueprints, Landing, Outpost, OutpostUi, Alert, RoverBuild, PhotoMission,
+    Boot, Title, Story, Scenario, HowTo, Blueprints, Landing, Outpost, OutpostUi, Alert, PhotoMission,
     Evacuated, Debrief, Credits, Glossary, Badges, UiTest,
   ],
 });
@@ -56,5 +56,7 @@ window.addEventListener("touchstart", () => game.registry.set("touchUsed", true)
 
 // Handy for testing in the browser console and for automated play-throughs.
 window.__outpost = game;
+// Lists any text that spills out of its panel or button (see src/utils/overflow.js).
+window.__overflow = () => findOverflow(game);
 
 export default game;

@@ -46,7 +46,15 @@ export const TEXT = {
   danger: "#ff5d5d",
 };
 
+/**
+ * Text is drawn at a higher resolution than the 640×360 canvas, so VT323
+ * stays sharp when the game is scaled up to fill the screen (no blur, no
+ * fuzzy edges). Plain text only: no shadow, stroke or outline anywhere.
+ */
+const DPR = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+export const TEXT_RESOLUTION = Math.min(4, Math.max(2, Math.ceil(DPR * 2)));
+
 /** Text style helper. `size` is the real font size in canvas pixels. */
 export function textStyle(size = UI.body, color = TEXT.white, extra = {}) {
-  return { fontFamily: FONT, fontSize: `${size}px`, color, ...extra };
+  return { fontFamily: FONT, fontSize: `${size}px`, color, resolution: TEXT_RESOLUTION, ...extra };
 }

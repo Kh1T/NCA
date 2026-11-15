@@ -1,4 +1,4 @@
-// Weather events and alerts. Pure data and functions: no Phaser here.
+﻿// Weather events and alerts. Pure data and functions: no Phaser here.
 //
 // Real events come from the cached NASA DONKI files. Deck events are curated
 // from real lunar science and are labelled "simplified" in the game.
@@ -31,8 +31,7 @@ export const ALERTS = {
     options: [
       {
         id: "shelter", label: "Take shelter", play: true,
-        costText: "Lose half a build day",
-        costTextBy: { SEP: "Building stops all day" },
+        costText: "Builds go slower today",
         cost: { buildDays: 0.5 },
       },
       { id: "work", label: "Keep working", costText: "Full radiation dose outside", cost: { dose: 1.5 } },
@@ -50,40 +49,11 @@ export const ALERTS = {
       return {
         eventDose: dose * (q * sheltered + (1 - q) * exposed),
         power: shieldOn ? -C.SHIELD_ON_POWER : 0,
-        // A flare passes in hours: half a build day lost. A particle storm lasts all day.
-        pause: event.level === "SEP",
-        slow: 0.5,
+        // Hiding inside costs some build time.
+        slow: 0.7,
         stat: "shelters",
         cause: event.level === "SEP" ? "sheltering from a particle storm" : "sheltering from a solar flare",
         note: q >= 1 ? "Everyone got inside in time!" : "Not everyone got inside in time.",
-      };
-    },
-  },
-
-  night: {
-    id: "night",
-    title: "Long shadow",
-    icon: "moon",
-    explain: "No sunlight for 2 days. What stays on?",
-    source: SIMPLIFIED,
-    sourceNote: "A real lunar night lasts about 14 Earth days. The game shortens it.",
-    timerSec: 0,
-    control: "toggle",
-    minigame: "NightSwitches",
-    options: [
-      { id: "all-on", label: "Keep everything on", costText: "The battery drains fast", cost: { power: 6 } },
-      { id: "greenhouse-off", label: "Greenhouse off", costText: "No food planted for 2 days", cost: { food: 3 } },
-      { id: "build-off", label: "Building off", costText: "Builds stop for 2 days", cost: { buildDays: 2 } },
-      { id: "both-off", label: "Both off", costText: "No planting and no building for 2 days", cost: { food: 3, buildDays: 2 } },
-    ],
-    buildImpact: { slowFactor: 0.5, pause: false },
-    scoreFn(result) {
-      const greenhouseOff = result.option === "greenhouse-off" || result.option === "both-off";
-      const buildOff = result.option === "build-off" || result.option === "both-off";
-      return {
-        effects: { nightDaysLeft: 2, nightGreenhouseOff: greenhouseOff, nightBuildOff: buildOff },
-        cause: "the long shadow",
-        note: "2 dark days. Builds go at half speed.",
       };
     },
   },
@@ -233,14 +203,7 @@ export const ALERTS = {
     buildImpact: { slowFactor: 0.5, pause: false },
     scoreFn(result, state) {
       if (result.option === "wait") {
-        const fast = state.buildings.antenna.status === "done";
-        return {
-          science: 2,
-          slow: fast ? 1 : 0.5,
-          power: fast ? -1 : 0,
-          cause: fast ? null : "waiting for Earth's answer",
-          note: fast ? "The big antenna got Earth's answer fast!" : "Earth was right! Waiting slowed the builds.",
-        };
+        return { science: 2, slow: 0.5, cause: "waiting for Earth's answer", note: "Earth was right! Waiting slowed the builds." };
       }
       const right = result.guessedRight ?? rand(state) < 0.5;
       return right
@@ -251,7 +214,7 @@ export const ALERTS = {
 };
 
 /** Cards the player can add to the weather deck. Real solar events always apply. */
-export const DECK_CARDS = ["night", "meteor", "leak", "dust", "temp", "plant", "comms"];
+export const DECK_CARDS = ["meteor", "leak", "dust", "temp", "plant", "comms"];
 export const MIN_DECK = 2;
 
 const DAY_MS = 86_400_000;
@@ -393,7 +356,6 @@ export function alertsForToday(state) {
     const def = ALERTS[event.id];
     if (!def) continue;
     if (def.requires && state.buildings[def.requires].status !== "done") continue;
-    if (event.id === "night" && state.effects.nightDaysLeft > 0) continue;
     const ready = { ...event };
     if (event.id === "meteor") {
       const built = Object.keys(state.buildings).filter((id) => state.buildings[id].status === "done" && state.buildings[id].health >= 100);

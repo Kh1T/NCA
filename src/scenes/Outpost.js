@@ -1,20 +1,20 @@
 import Phaser from "phaser";
 import { GROUND_Y, HEIGHT, PALETTE, TEXT, WIDTH, textStyle } from "../constants.js";
 import { ITEMS } from "../sim/buildings.js";
+import { isNight } from "../sim/rules.js";
 import { drawShip, drawSite } from "../ui/art.js";
 import { drawIcon } from "../ui/icons.js";
 import { TouchPad } from "../ui/TouchPad.js";
 import { drawEarth, drawGround, drawHills, drawStars } from "../ui/backdrop.js";
 import { sfx, playMusic } from "../ui/sfx.js";
 
-export const WORLD_W = 1500;
+export const WORLD_W = 1200;
 export const SHIP_X = 120;
 export const SITE_X = {
-  solar: 300, water: 450, air: 600, oxygen: 750, greenhouse: 900, shield: 1050, antenna: 1200, rover: 1350,
+  solar: 280, air: 420, oxygen: 560, greenhouse: 700, shield: 840, rover: 1000,
 };
 const ROCKS = [
-  { x: 375, w: 18, h: 8 }, { x: 525, w: 14, h: 6 }, { x: 675, w: 22, h: 11 }, { x: 825, w: 16, h: 7 },
-  { x: 975, w: 18, h: 10 }, { x: 1125, w: 14, h: 7 }, { x: 1275, w: 20, h: 10 },
+  { x: 350, w: 18, h: 8 }, { x: 490, w: 14, h: 6 }, { x: 630, w: 22, h: 11 }, { x: 770, w: 16, h: 7 }, { x: 920, w: 18, h: 10 },
 ];
 const REACH = 38;
 const SPEED = 100;
@@ -57,14 +57,10 @@ export class Outpost extends Phaser.Scene {
       this.solids.add(block);
     }
 
-    // Ship and two crewmates who stay near it.
+    // The ship. There is only one astronaut: you.
     const ship = this.add.graphics();
     drawShip(ship, SHIP_X, GROUND_Y);
     this.add.text(SHIP_X, GROUND_Y + 4, "SHIP", textStyle(16, "#23262d")).setOrigin(0.5, 0);
-    if (this.textures.exists("astro-walk-3")) {
-      this.add.image(SHIP_X - 52, GROUND_Y - 22, "astro-walk-3").setFlipX(true);
-      this.add.image(SHIP_X - 86, GROUND_Y - 22, "astro-walk-6").setFlipX(true);
-    }
 
     // Building sites.
     this.sites = {};
@@ -109,7 +105,8 @@ export class Outpost extends Phaser.Scene {
     this.events.once("shutdown", () => this.registry.set("outpostX", this.player.x));
 
     // On-screen buttons for touch screens (hidden until the first touch).
-    this.pad = new TouchPad(this, { y: 268 });
+    // JUMP and USE sit just left of the checklist panel, so it never hides them.
+    this.pad = new TouchPad(this, { y: 268, rightEdge: 484 });
 
     this.scene.launch("OutpostUi");
     this.scene.bringToTop("OutpostUi");
@@ -129,13 +126,13 @@ export class Outpost extends Phaser.Scene {
       let icon = null;
       let days = "";
       if (!building.packed) icon = "cross";
-      else if (building.status === "idle") icon = id === "rover" && state.phase < 2 ? "lock" : null;
       else if (building.status === "building") {
         icon = "build";
         days = `${Math.ceil(building.daysLeft)}d`;
-      } else if (building.health < 100) icon = "broken";
-      else if (!building.on) icon = "mute";
-      else icon = "check";
+      } else if (building.status === "done" && building.health < 100) icon = "broken";
+      // A finished, working building needs no badge: the building itself shows it.
+      if (building.status === "done" && site.wasDone === false) this.popSite(site);
+      site.wasDone = building.status === "done";
       site.status.clear();
       if (icon) {
         site.status.fillStyle(0x05060a, 0.75);
@@ -146,10 +143,57 @@ export class Outpost extends Phaser.Scene {
       site.days.setText(days);
       site.name.setColor(building.packed ? "#23262d" : "#4c4f56");
     }
-    const night = state.effects.nightDaysLeft > 0;
-    this.baseShade = night ? 0.42 : 0;
+    this.baseShade = isNight(state) ? 0.45 : 0;
     if (!this.lapsing) this.shade.setAlpha(this.baseShade);
     this.drawMarker();
+  }
+
+  /** A finished building bounces and sparkles. */
+  popSite(site) {
+    site.g.setScale(1, 1);
+    const burst = this.add.graphics().setDepth(6);
+    for (let i = 0; i < 10; i += 1) {
+      const a = (i / 10) * Math.PI * 2;
+      burst.fillStyle(i % 2 ? PALETTE.accent : PALETTE.good, 1);
+      burst.fillRect(site.x + Math.cos(a) * 26, GROUND_Y - 30 + Math.sin(a) * 26, 3, 3);
+    }
+    this.tweens.add({ targets: burst, alpha: 0, scale: 1.4, duration: 700, onComplete: () => burst.destroy() });
+  }
+
+  /** The astronaut says something: a speech bubble above their head. */
+  say(text, icon = null) {
+    this.bubble?.destroy();
+    const pad = 6;
+    const label = this.add.text(0, 0, text, textStyle(16, "#05060a", { wordWrap: { width: 170 } }));
+    // The box is always sized to the wrapped text, so the words never spill out.
+    const w = label.width + pad * 2 + (icon ? 22 : 0);
+    const h = label.height + pad * 2;
+    const g = this.add.graphics();
+    g.fillStyle(0xf2f5fa, 1);
+    g.fillRect(0, 0, w, h);
+    g.fillTriangle(w / 2 - 6, h, w / 2 + 6, h, w / 2, h + 8);
+    if (icon) drawIcon(g, icon, pad, h / 2 - 9, 1.5);
+    label.setPosition(pad + (icon ? 22 : 0), pad);
+    const box = this.add.container(0, 0, [g, label]).setDepth(30).setSize(w, h);
+    box.bubbleW = w; // not .w: Phaser containers use that name already
+    box.bubbleH = h;
+    this.bubble = box;
+    this.placeBubble();
+    box.setScale(0);
+    this.tweens.add({ targets: box, scale: 1, duration: 200, ease: "Back.easeOut" });
+    this.time.delayedCall(4500, () => {
+      if (this.bubble !== box) return;
+      this.tweens.add({ targets: box, alpha: 0, duration: 300, onComplete: () => { box.destroy(); if (this.bubble === box) this.bubble = null; } });
+    });
+  }
+
+  placeBubble() {
+    if (!this.bubble) return;
+    const cam = this.cameras.main;
+    // Stay left of the checklist panel (screen x 488 and beyond).
+    const x = Phaser.Math.Clamp(this.player.x - this.bubble.bubbleW / 2, cam.scrollX + 4, cam.scrollX + 482 - this.bubble.bubbleW);
+    // Above the "E: ..." prompt, which sits just over the astronaut's head.
+    this.bubble.setPosition(x, Math.max(96, this.player.y - 62 - this.bubble.bubbleH));
   }
 
   /** Pulse an arrow over the thing the guide line is talking about. */
@@ -195,7 +239,7 @@ export class Outpost extends Phaser.Scene {
     if (!near) return;
     this.walkTarget = null;
     sfx("click");
-    if (near === "ship") this.ui.openPlan();
+    if (near === "ship" || (near === "rover" && this.state.buildings.rover.status === "done")) this.ui.openDay();
     else this.ui.openSite(near);
   }
 
@@ -262,6 +306,7 @@ export class Outpost extends Phaser.Scene {
       }
     }
 
+    this.placeBubble();
     this.player.setVelocityX(direction * SPEED);
     if (direction !== 0) {
       this.player.setFlipX(direction < 0);
@@ -276,7 +321,7 @@ export class Outpost extends Phaser.Scene {
 
     const near = this.nearest();
     if (near) {
-      const label = near === "ship" ? "SHIP: PLAN THE DAY" : ITEMS[near].name.toUpperCase();
+      const label = near === "ship" ? "SHIP: NEXT DAY" : ITEMS[near].name.toUpperCase();
       this.prompt.setText(`${this.registry.get("touchUsed") ? "TAP: " : "E: "}${label}`).setPosition(this.player.x, this.player.y - 30).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(k.e) || Phaser.Input.Keyboard.JustDown(k.enter) || use) this.interact();
     } else {

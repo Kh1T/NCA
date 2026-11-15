@@ -1,10 +1,9 @@
-import Phaser from "phaser";
-import { PALETTE, TEXT, UI } from "../constants.js";
-import { budgetOf, getMission, startMission } from "../data/mission.js";
+﻿import Phaser from "phaser";
+import { PALETTE, TEXT, UI, WIDTH } from "../constants.js";
+import { budgetOf, getMission, packOf, startMission } from "../data/mission.js";
 import { ITEMS, ITEM_ORDER, packCost, packWarnings, starterPlan } from "../sim/buildings.js";
 import { forecast } from "../sim/rules.js";
 import { drawStars } from "../ui/backdrop.js";
-import { drawCeres } from "../ui/art.js";
 import { ITEM_MAKES, ITEM_NEEDS, drawChips } from "../ui/chips.js";
 import { ICON_COLOR, ITEM_ICON, drawIcon } from "../ui/icons.js";
 import { infoButton } from "../ui/InfoCard.js";
@@ -16,7 +15,7 @@ const ROW_Y = 46;
 const ROW_H = 22;
 const LAST = ["power", "oxygen", "air", "water", "food"];
 const NEXT_SCENE = "Landing";
-const BACK_SCENE = "Briefing";
+const BACK_SCENE = "HowTo";
 
 /** Plan resources: spend Mission Points on blueprints and kits. */
 export class Blueprints extends Phaser.Scene {
@@ -27,12 +26,67 @@ export class Blueprints extends Phaser.Scene {
   create() {
     this.events.once("shutdown", () => clearFocusFor(this));
     this.mission = getMission(this);
-    if (!this.mission.packed) this.mission.packed = {};
-    this.packed = this.mission.packed;
     this.selected = "solar";
-
     drawStars(this, { seed: "blueprints" });
     playMusic("menu");
+    this.showChoice();
+  }
+
+  /** Step 1: the STARTER PACK (ready to go) or MAKE MY OWN. */
+  showChoice() {
+    this.layer?.destroy();
+    this.detail?.destroy();
+    if (this.coach?.active) this.coach.finish();
+    const L = (this.layer = new Layer(this, { keys: true }));
+    L.text(WIDTH / 2, 8, "PACK YOUR SHIP", { size: UI.title, color: TEXT.accent, origin: 0.5 });
+    const custom = Boolean(this.mission.packed && Object.keys(this.mission.packed).length > 0);
+
+    // The starter pack: a big card showing everything inside.
+    const starter = L.button(186, 182, "", () => this.flyStarter(), { w: 330, h: 236, key: "S" });
+    starter.setSelected(!custom);
+    L.text(186, 76, "STARTER PACK", { size: UI.title, color: TEXT.accent, origin: 0.5 });
+    L.text(186, 108, "SAFE AND READY TO GO!", { color: TEXT.good, origin: 0.5 });
+    const pack = starterPlan(budgetOf(this.mission));
+    const g = L.gfx();
+    const ids = Object.keys(pack);
+    ids.forEach((id, i) => {
+      const col = i % 5;
+      const row = Math.floor(i / 5);
+      const ix = 48 + col * 56;
+      const iy = 136 + row * 64;
+      g.fillStyle(0x0b1018, 1);
+      g.fillRect(ix, iy, 48, 48);
+      drawIcon(g, ITEM_ICON[id], ix + 6, iy + 6, 3);
+      if (pack[id] > 1) L.text(ix + 46, iy + 30, `x${pack[id]}`, { origin: 1, color: TEXT.accent });
+    });
+    L.text(186, 276, "TAP TO FLY!", { size: UI.big, origin: 0.5 });
+
+    // Make my own: opens the full list.
+    const own = L.button(490, 182, "", () => this.showEditor(), { w: 256, h: 236, key: "M" });
+    own.setSelected(custom);
+    L.text(490, 76, "MAKE MY OWN", { size: UI.title, color: TEXT.accent, origin: 0.5 });
+    const g2 = L.gfx();
+    drawIcon(g2, "crate", 450, 116, 6);
+    L.text(490, 214, `${budgetOf(this.mission)} POINTS TO SPEND`, { origin: 0.5, color: TEXT.muted });
+    L.text(490, 240, custom ? "EDIT YOUR PACK" : "FOR EXPERTS", { origin: 0.5, color: TEXT.muted });
+
+    L.button(70, 330, "BACK", () => this.scene.start(BACK_SCENE), { w: 110, h: 36, key: "ESCAPE", icon: "back" });
+    if (custom) L.button(540, 330, "FLY MY PACK", () => this.next(), { w: 180, h: 36, icon: "play" });
+    else L.button(540, 330, "FLY!", () => this.flyStarter(), { w: 180, h: 36, icon: "play" });
+    L.focusFirst(custom ? own : starter);
+  }
+
+  flyStarter() {
+    this.mission.packed = null; // null = the starter pack
+    startMission(this);
+    this.scene.start(NEXT_SCENE);
+  }
+
+  /** Step 2 (optional): spend points on blueprints and kits yourself. */
+  showEditor() {
+    this.layer?.destroy();
+    if (!this.mission.packed || Object.keys(this.mission.packed).length === 0) this.mission.packed = { ...packOf(this.mission) };
+    this.packed = this.mission.packed;
     this.layer = new Layer(this, { keys: true });
     const L = this.layer;
     L.text(8, 4, "PACK YOUR SHIP", { size: UI.title, color: TEXT.accent });
@@ -46,13 +100,10 @@ export class Blueprints extends Phaser.Scene {
     L.panel(340, 44, 292, 244);
     this.detail = new Layer(this, { depth: 1, keys: false });
 
-    const ceres = L.gfx();
-    drawCeres(ceres, 0, 0);
-    ceres.setScale(0.6).setPosition(16, 314);
-    this.guide = L.text(32, 294, "", { wrap: 600, color: TEXT.good });
+    this.guide = L.text(8, 294, "", { wrap: 620, color: TEXT.good });
     L.button(82, 338, "STARTER", () => this.fillStarter(), { w: 150, h: 36, key: "S", icon: "check" });
     L.button(206, 338, "CLEAR", () => this.clearAll(), { w: 86, h: 36 });
-    L.button(456, 338, "BACK", () => this.scene.start(BACK_SCENE), { w: 92, h: 36, key: "ESCAPE" });
+    L.button(456, 338, "BACK", () => this.showChoice(), { w: 92, h: 36, key: "ESCAPE" });
     this.nextButton = L.button(570, 338, "NEXT", () => this.next(), { w: 120, h: 36, key: "ENTER", icon: "play" });
 
     this.refresh();
@@ -60,7 +111,7 @@ export class Blueprints extends Phaser.Scene {
     this.coach = runTutorial(this, "blueprints", [
       { icon: "crate", text: "Tap + to pack a blueprint. Each costs points.", target: () => ({ x: 4, y: 42, w: 334, h: 244 }) },
       { icon: "check", text: "These bars show if your supplies will last.", target: () => ({ x: 342, y: 176, w: 288, h: 110 }) },
-      { icon: "question", text: "Not sure? STARTER packs a safe ship.", target: () => ({ x: 7, y: 320, w: 150, h: 36 }) },
+      
     ]);
   }
 
@@ -201,12 +252,13 @@ export class Blueprints extends Phaser.Scene {
     drawChips(D, x, 160, [item.kind === "building" ? ["clock", `${item.buildDays} DAY${item.buildDays > 1 ? "S" : ""} TO BUILD`, TEXT.muted] : ["check", "WORKS FROM DAY 1", TEXT.muted]], { size: UI.body, iconScale: 1.2 });
 
     // "Will it last?" Plays a 10-day mission with this pack and no weather.
-    D.text(x, 182, "WILL IT LAST 10 DAYS?", { color: TEXT.accent });
-    const result = forecast(this.packed, 10);
+    const days = this.mission.totalDays;
+    D.text(x, 182, `WILL IT LAST ${days} DAYS?`, { color: TEXT.accent });
+    const result = forecast(this.packed, days, this.mission.nightDays ?? 2);
     LAST.forEach((key, i) => {
       const y = 200 + i * 14;
       const failDay = result[key];
-      const share = failDay === null ? 1 : Math.max(0.08, (failDay - 1) / 10);
+      const share = failDay === null ? 1 : Math.max(0.08, (failDay - 1) / days);
       drawIcon(g, key, x, y, 1);
       g.fillStyle(0x232a36, 1);
       g.fillRect(x + 18, y + 2, 150, 8);
@@ -216,7 +268,7 @@ export class Blueprints extends Phaser.Scene {
       else D.text(x + 176, y - 3, `DAY ${failDay}`, { color: TEXT.danger });
     });
     const roverOk = result.roverDay !== null;
-    drawChips(D, x, 270, [["rover", roverOk ? `READY DAY ${result.roverDay}` : "NOT READY IN 10 DAYS", roverOk ? TEXT.good : TEXT.danger]], { size: UI.body, iconScale: 1.2 });
+    drawChips(D, x, 270, [["rover", roverOk ? `READY DAY ${result.roverDay}` : "NOT READY IN TIME", roverOk ? TEXT.good : TEXT.danger]], { size: UI.body, iconScale: 1.2 });
   }
 
   next() {

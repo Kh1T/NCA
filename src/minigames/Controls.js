@@ -1,4 +1,4 @@
-// The alerts that are answered with a control instead of a timed game:
+﻿// The alerts that are answered with a control instead of a timed game:
 // switches, sliders, and the wait-or-decide radio call.
 
 import { PALETTE, TEXT, UI } from "../constants.js";
@@ -7,7 +7,6 @@ import { ICON_COLOR, drawIcon } from "../ui/icons.js";
 import { Layer } from "../ui/kit.js";
 import { sfx } from "../ui/sfx.js";
 import { Slider } from "../ui/Slider.js";
-import { Toggle } from "../ui/Toggle.js";
 
 const optionById = (def, id) => def.options.find((option) => option.id === id);
 
@@ -21,37 +20,6 @@ function costRow(scene, x, y, maxWidth) {
     drawChips(layer, x + 64, y - 1, costChips(option.cost).map(([i, t]) => [i, t, TEXT.danger]), { maxWidth: maxWidth - 64 });
     return layer;
   };
-}
-
-/** Long shadow: pick which modules stay alive on battery. */
-export class NightSwitches {
-  constructor(scene, layer, area, ctx, done) {
-    const { def, state } = ctx;
-    const hasGreenhouse = state.buildings.greenhouse.status === "done";
-    let greenhouse = true;
-    let building = true;
-    layer.text(area.x, area.y, "WHAT STAYS ON FOR 2 DARK DAYS?", { color: TEXT.accent });
-    const g = layer.gfx();
-    const rows = [["food", "GREENHOUSE"], ["build", "BUILDING"], ["air", "LIFE SUPPORT"]];
-    rows.forEach(([icon, label], i) => {
-      drawIcon(g, icon, area.x, area.y + 30 + i * 36, 1.5);
-      layer.text(area.x + 26, area.y + 28 + i * 36, label, { size: UI.big });
-    });
-    layer.text(area.x + 200, area.y + 100, "ALWAYS ON", { size: UI.big, color: TEXT.good });
-    const pick = () => (greenhouse && building ? "all-on" : !greenhouse && !building ? "both-off" : greenhouse ? "build-off" : "greenhouse-off");
-    const showCost = costRow(scene, area.x, area.y + 142, area.w - 150);
-    this.costLayer = showCost(optionById(def, pick()));
-    const update = () => { this.costLayer = showCost(optionById(def, pick())); };
-    const first = new Toggle(layer, { x: area.x + 200, y: area.y + 26, value: true, onChange: (value) => { greenhouse = value; update(); } });
-    new Toggle(layer, { x: area.x + 200, y: area.y + 62, value: true, onChange: (value) => { building = value; update(); } });
-    if (!hasGreenhouse) layer.text(area.x + 320, area.y + 30, "(NOT BUILT YET)", { color: "#4c5566" });
-    layer.button(area.x + area.w - 66, area.y + 150, "OK", () => done({ option: pick() }), { w: 120, h: 36, key: "ENTER", icon: "check" });
-    layer.focus.focusItem(first);
-  }
-
-  destroy() {
-    this.costLayer?.destroy();
-  }
 }
 
 /** Temperature swing: more heat keeps work going, but costs power. */
@@ -129,14 +97,13 @@ export class PlantBalance {
  */
 export class CommsWait {
   constructor(scene, layer, area, ctx, done) {
-    const { def, state } = ctx;
-    const antenna = state.buildings.antenna.status === "done";
+    const { def } = ctx;
     this.scene = scene;
     layer.text(area.x, area.y, "VALVE A OR B? EARTH KNOWS THE ANSWER.", { color: TEXT.accent });
     const half = area.w / 2;
     layer.panel(area.x, area.y + 22, half - 8, 110);
     layer.panel(area.x + half + 8, area.y + 22, half - 8, 110);
-    const waitChips = antenna ? [["power", "-1", TEXT.danger]] : costChips(optionById(def, "wait").cost).map(([i, t]) => [i, t, TEXT.danger]);
+    const waitChips = costChips(optionById(def, "wait").cost).map(([i, t]) => [i, t, TEXT.danger]);
     layer.text(area.x + 12, area.y + 84, "COSTS", { color: "#ffb347" });
     drawChips(layer, area.x + 76, area.y + 83, waitChips);
     layer.text(area.x + half + 20, area.y + 84, "COSTS", { color: "#ffb347" });
@@ -152,7 +119,7 @@ export class CommsWait {
       scene.tweens.addCounter({
         from: 0,
         to: 1,
-        duration: antenna ? 1300 : 2600,
+        duration: 2600,
         onUpdate: (tween) => {
           const t = tween.getValue();
           const there = t < 0.5 ? t * 2 : (1 - t) * 2;

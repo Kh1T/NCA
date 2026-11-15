@@ -2,89 +2,79 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { missionStartDate } from "../../data/nasa.js";
-import { CUSTOM, DIFFICULTY_IDS, SCENARIOS, goalsFor, missionFromScenario } from "../../data/scenarios.js";
-import { packCost, starterPlan } from "../buildings.js";
+import { SCENARIOS, missionFromScenario } from "../../data/scenarios.js";
+import { INFO } from "../../data/info.js";
+import { REQUIRED, packCost, starterPlan } from "../buildings.js";
 import { ALERTS, DECK_CARDS, alertsForToday, applyAlertResult, buildSchedule, capEvents, countEvents, onAlertStart } from "../events.js";
-import { advanceDay, autoBuild, autoPlan } from "../rules.js";
+import { PHOTO, advanceDay, autoBuild, dayCard, recordChoice } from "../rules.js";
 import { createState } from "../state.js";
 
 const donki = (id) => JSON.parse(fs.readFileSync(path.resolve("public/data/donki", `${id}.json`), "utf8"));
 const words = (text) => text.trim().split(/\s+/).length;
 
-/** Play a mission's base phase with the helper plan. Returns the final state. */
-function playMission(mission, seed = 11) {
+/**
+ * Play a whole mission with the best call each day. Each rover trip is
+ * counted as 3 photos (a careful player can get more). flare: shelter|work.
+ */
+function playMission(mission, { seed = 11, flare = "shelter", choose = (card) => card.best } = {}) {
   const file = donki(mission.dateId);
   const missionDate = missionStartDate(file, mission.dateId, mission.totalDays, 0.5);
   const schedule = buildSchedule({ donki: file, missionDate, totalDays: mission.totalDays, weatherDeck: mission.deck, seed, maxEvents: mission.maxEvents });
-  const packed = starterPlan(mission.budget);
-  let state = createState({ packed, weatherDeck: mission.deck, missionDate, totalDays: mission.totalDays, seed, schedule });
-  while (!state.outcome && state.day <= mission.totalDays) {
+  let state = createState({ packed: starterPlan(mission.budget), weatherDeck: mission.deck, missionDate, totalDays: mission.totalDays, nightDays: mission.nightDays, seed, schedule });
+  while (!state.outcome) {
     autoBuild(state);
+    const card = dayCard(state);
+    const action = choose(card);
+    recordChoice(state, card, action);
     for (const event of alertsForToday(state).alerts) {
       onAlertStart(state, event);
-      // Shelter from flares unless a supply is about to run out.
-      const urgent = ["oxygen", "air", "water"].some((key) => state[key] < 2.2 && state.buildings[key].status !== "done");
-      const option = event.id === "flare" ? (urgent ? "work" : "shelter") : ALERTS[event.id].options[0].id;
+      const option = event.id === "flare" ? flare : ALERTS[event.id].options[0].id;
       applyAlertResult(state, event, { option, quality: 1, refill: 0.5 });
     }
-    state = advanceDay(state, autoPlan(state)).state;
-    if (state.buildings.rover.status === "done") break;
+    if (action === "trip") state.photosTaken = Math.min(PHOTO.TARGETS, state.photosTaken + 3);
+    state = advanceDay(state, { action }).state;
   }
-  return { state, schedule };
+  return state;
 }
 
 describe("scenario data", () => {
-  it("every scenario has the full shape and unique ids", () => {
+  it("every scenario has the full shape, unique ids and an info card", () => {
     const ids = new Set();
     for (const s of SCENARIOS) {
       expect(ids.has(s.id)).toBe(false);
       ids.add(s.id);
-      expect(s.mode).toBe("real");
-      for (const field of ["title", "icon", "story", "donki"]) expect(typeof s[field]).toBe("string");
+      for (const field of ["title", "icon", "story", "donki", "info", "tip"]) expect(typeof s[field]).toBe("string");
+      expect(INFO[s.info], s.info).toBeDefined();
       expect(fs.existsSync(path.resolve("public/data/donki", `${s.donki}.json`))).toBe(true);
       for (const card of s.deck) expect(DECK_CARDS).toContain(card);
-      for (const level of DIFFICULTY_IDS) {
-        const d = s.difficulty[level];
-        expect(d.days).toBeGreaterThan(0);
-        expect(d.budget).toBeGreaterThanOrEqual(packCost({ solar: 1, water: 1, oxygen: 1, air: 1, greenhouse: 1, shield: 1, rover: 1 }));
-      }
+      expect(s.nightDays).toBeGreaterThan(0);
+      expect(s.days - s.nightDays).toBeGreaterThanOrEqual(5);
+      expect(s.budget).toBeGreaterThanOrEqual(packCost(Object.fromEntries(REQUIRED.map((id) => [id, 1]))));
+      expect(s.stars).toBeGreaterThanOrEqual(1);
     }
   });
 
-  it("keeps card and briefing text short (12 words or fewer)", () => {
-    for (const s of [...SCENARIOS, CUSTOM]) {
-      expect(words(s.story)).toBeLessThanOrEqual(12);
-      for (const goal of goalsFor(s, 10)) expect(words(goal.text)).toBeLessThanOrEqual(12);
-    }
+  it("the missions go from easy to hard", () => {
+    const stars = SCENARIOS.map((s) => s.stars);
+    expect([...stars].sort()).toEqual(stars);
   });
 
-  it("harder levels mean more alerts, fewer points and fewer days to build", () => {
+  it("keeps card text short (12 words or fewer)", () => {
     for (const s of SCENARIOS) {
-      const [easy, medium, hard] = DIFFICULTY_IDS.map((id) => s.difficulty[id]);
-      expect(easy.days).toBeGreaterThan(medium.days);
-      expect(medium.days).toBeGreaterThan(hard.days);
-      expect(easy.budget).toBeGreaterThan(hard.budget);
-      expect(easy.maxEvents).toBeLessThan(medium.maxEvents);
-      expect(medium.maxEvents).toBeLessThan(hard.maxEvents);
+      expect(words(s.story)).toBeLessThanOrEqual(12);
+      expect(words(s.tip)).toBeLessThanOrEqual(12);
     }
-  });
-
-  it("turns a custom setup into a mission", () => {
-    const mission = missionFromScenario(CUSTOM, null, { donki: "storm", days: 5, events: 2, deck: ["leak", "dust"] });
-    expect(mission).toMatchObject({ mode: "custom", dateId: "storm", totalDays: 5, maxEvents: 2, deck: ["leak", "dust"] });
   });
 });
 
-describe("event cap (difficulty)", () => {
+describe("event cap", () => {
   it("never schedules more alerts than maxEvents", () => {
     for (const s of SCENARIOS) {
-      for (const level of DIFFICULTY_IDS) {
-        const mission = missionFromScenario(s, level);
-        const file = donki(mission.dateId);
-        const date = missionStartDate(file, mission.dateId, mission.totalDays, 0);
-        const schedule = buildSchedule({ donki: file, missionDate: date, totalDays: mission.totalDays, weatherDeck: mission.deck, seed: 3, maxEvents: mission.maxEvents });
-        expect(countEvents(schedule)).toBeLessThanOrEqual(mission.maxEvents);
-      }
+      const mission = missionFromScenario(s);
+      const file = donki(mission.dateId);
+      const date = missionStartDate(file, mission.dateId, mission.totalDays, 0);
+      const schedule = buildSchedule({ donki: file, missionDate: date, totalDays: mission.totalDays, weatherDeck: mission.deck, seed: 3, maxEvents: mission.maxEvents });
+      expect(countEvents(schedule)).toBeLessThanOrEqual(mission.maxEvents);
     }
   });
 
@@ -102,15 +92,24 @@ describe("event cap (difficulty)", () => {
   });
 });
 
-describe("balance: every real scenario can be won at every level", () => {
+describe("balance: every mission can be won with good choices", () => {
   for (const s of SCENARIOS) {
-    for (const level of DIFFICULTY_IDS) {
-      it(`${s.title} on ${level}: the helper plan builds the rover in time`, () => {
-        const mission = missionFromScenario(s, level);
-        const { state } = playMission(mission);
-        expect(state.outcome).toBeNull();
-        expect(state.buildings.rover.status).toBe("done");
-      });
-    }
+    it(`${s.title}: the best calls win`, () => {
+      const state = playMission(missionFromScenario(s));
+      expect(state.outcome, JSON.stringify(state.outcome)).toMatchObject({ kind: "success" });
+    });
   }
+
+  it("the storm night drains the battery: never charging or saving runs it flat", () => {
+    const mission = missionFromScenario(SCENARIOS.find((s) => s.id === "gannon-2024"));
+    const careless = playMission(mission, { choose: (card) => card.options.find((o) => o !== "charge" && o !== "save") ?? card.best });
+    expect(careless.stats.nightPowerOut).toBeGreaterThan(0);
+  });
+
+  it("always working through the storm costs far more radiation", () => {
+    const mission = missionFromScenario(SCENARIOS.find((s) => s.id === "gannon-2024"));
+    const safe = playMission(mission, { flare: "shelter" });
+    const reckless = playMission(mission, { flare: "work" });
+    expect(reckless.doseMSv).toBeGreaterThan(safe.doseMSv * 1.5);
+  });
 });

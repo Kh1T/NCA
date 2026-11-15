@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+﻿import Phaser from "phaser";
 import { PALETTE } from "../constants.js";
 import { drawIcon } from "./icons.js";
 
@@ -144,17 +144,17 @@ export class Cockpit {
     const { w, h } = this;
     g.clear();
     // Gauges along the console strip at the top of the window.
-    const gauge = (x, icon, share, color) => {
+    const gauge = (x, icon, share, color, warn = true) => {
       drawIcon(g, icon, x, 3, 1);
       g.fillStyle(0x232a36, 1);
       g.fillRect(x + 15, 7, 36, 5);
-      g.fillStyle(share < 0.25 ? PALETTE.danger : color, 1);
+      g.fillStyle(warn && share < 0.25 ? PALETTE.danger : color, 1);
       g.fillRect(x + 15, 7, Math.round(36 * Phaser.Math.Clamp(share, 0, 1)), 5);
     };
     void h;
     gauge(6, "battery", s.battery, PALETTE.good);
     gauge(64, "thermo", s.heat, 0xff8c42);
-    gauge(122, "clock", s.time, PALETTE.accent);
+    gauge(122, "camera", s.time, PALETTE.accent, false);
     void w;
   }
 

@@ -1,4 +1,4 @@
-import { HEIGHT, PALETTE, TEXT, UI, WIDTH } from "../constants.js";
+﻿import { HEIGHT, PALETTE, TEXT, UI, WIDTH } from "../constants.js";
 import { markSeen, seen } from "../utils/progress.js";
 import { drawIcon } from "./icons.js";
 import { Layer, measure } from "./kit.js";
@@ -55,7 +55,7 @@ export class Coach {
 
     // The speech bubble goes on whichever side has more room.
     const bw = 340;
-    const bh = Math.max(84, measure(this.scene, step.text, bw - 54, UI.big).height + 52);
+    const bh = Math.max(96, measure(this.scene, step.text, bw - 54, UI.big).height + 62);
     const below = !box || box.y + box.h / 2 < HEIGHT / 2;
     const bx = box ? Math.max(8, Math.min(WIDTH - bw - 8, box.x + box.w / 2 - bw / 2)) : (WIDTH - bw) / 2;
     let by;
@@ -81,12 +81,12 @@ export class Coach {
     const dots = L.gfx();
     this.steps.forEach((_, i) => {
       dots.fillStyle(i === this.index ? PALETTE.accent : 0x3a4658, 1);
-      dots.fillCircle(bx + 14 + i * 14, by + bh - 16, 4);
+      dots.fillCircle(bx + 14 + i * 14, by + bh - 22, 4);
     });
-    L.text(bx + 14 + this.steps.length * 14, by + bh - 26, `${this.index + 1}/${this.steps.length}`, { color: TEXT.muted });
+    L.text(bx + 14 + this.steps.length * 14, by + bh - 32, `${this.index + 1}/${this.steps.length}`, { color: TEXT.muted });
     const last = this.index === this.steps.length - 1;
-    L.button(bx + bw - 150, by + bh - 18, "SKIP", () => this.finish(), { w: 70, h: 26, key: "ESCAPE" });
-    const next = L.button(bx + bw - 52, by + bh - 18, last ? "GOT IT" : "NEXT", () => this.next(), { w: 88, h: 26, key: "ENTER" });
+    L.button(bx + bw - 154, by + bh - 23, "SKIP", () => this.finish(), { w: 76, h: 34, key: "ESCAPE" });
+    const next = L.button(bx + bw - 56, by + bh - 23, last ? "GOT IT" : "NEXT", () => this.next(), { w: 96, h: 34, key: "ENTER" });
     L.focusFirst(next);
   }
 

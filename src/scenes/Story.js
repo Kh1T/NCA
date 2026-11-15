@@ -40,8 +40,9 @@ export class Story extends Phaser.Scene {
       () => this.sceneArrive(),
     ];
     const UIL = (this.ui = new Layer(this, { depth: 50, keys: true }));
+    // A plain dark band behind the caption keeps it readable without any outline effect.
+    UIL.rect(0, 286, WIDTH, 50, 0x05060a, 0.85);
     this.caption = UIL.text(WIDTH / 2, 296, "", { size: UI.big + 4, origin: 0.5, wrap: 600, align: "center" });
-    this.caption.setStroke("#05060a", 5);
     this.dots = UIL.gfx();
     UIL.button(580, 30, "SKIP", () => this.finish(), { w: 96, h: 32, key: "ESCAPE", icon: "play" });
     UIL.focus.hotkey("ENTER", () => this.advance());

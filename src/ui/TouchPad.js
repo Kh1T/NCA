@@ -12,7 +12,8 @@ const SIZE = 48;
  * once per press.
  */
 export class TouchPad {
-  constructor(scene, { y = HEIGHT - 40, useLabel = "use", depth = 60 } = {}) {
+  /** rightEdge: where the JUMP/USE pair ends (the base moves them left of its checklist). */
+  constructor(scene, { y = HEIGHT - 40, useLabel = "use", depth = 60, rightEdge = WIDTH } = {}) {
     this.scene = scene;
     this.left = false;
     this.right = false;
@@ -23,8 +24,8 @@ export class TouchPad {
     const buttons = [
       { id: "left", x: 34, icon: "back" },
       { id: "right", x: 34 + SIZE + 12, icon: "play" },
-      { id: "use", x: WIDTH - 34 - SIZE - 12, icon: useLabel === "use" ? "check" : useLabel },
-      { id: "jump", x: WIDTH - 34, icon: "jump" },
+      { id: "use", x: rightEdge - 34 - SIZE - 12, icon: useLabel === "use" ? "check" : useLabel },
+      { id: "jump", x: rightEdge - 34, icon: "jump" },
     ];
     for (const b of buttons) this.makeButton(b, y, depth);
     // Shown once the screen has been touched anywhere (main.js sets "touchUsed").

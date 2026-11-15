@@ -1,13 +1,12 @@
-import Phaser from "phaser";
+﻿import Phaser from "phaser";
 import { PALETTE, TEXT, UI, WIDTH } from "../constants.js";
-import { readBest, saveBest } from "../data/mission.js";
+import { readBest, saveBest, scenarioOf } from "../data/mission.js";
 import { cachedOnText, getDonki, getFacts, niceDate } from "../data/nasa.js";
 import { dateForDay } from "../sim/events.js";
-import { PHOTO } from "../sim/rules.js";
+import { ACTIONS, PHOTO } from "../sim/rules.js";
 import {
-  causeChain, doseComparison, finalScore, leftovers, outcomeKind, pickFactTag, realEventsSeen, retryHints, starGoals,
+  causeChain, doseComparison, finalScore, goodCalls, leftovers, outcomeKind, pickFactTag, realEventsSeen, retryHints, starGoals,
 } from "../sim/scoring.js";
-import { drawCeres } from "../ui/art.js";
 import { celebrateBadges } from "../ui/Toast.js";
 import { drawStars as starfield } from "../ui/backdrop.js";
 import { drawChips } from "../ui/chips.js";
@@ -26,11 +25,11 @@ const TITLES = {
 const LESSONS = {
   air: "Real stations watch their air cleaners all the time.",
   oxygen: "Real crews keep spare oxygen for when machines break.",
-  water: "Real missions recycle almost every drop of water.",
+  water: "Real stations recycle almost every drop of water, using power.",
   food: "Plants take time. Real crews pack stored food too.",
   dose: "A small, thick-walled shelter helps crews wait out a flare.",
-  timer: "Explorers set a turn-around time and stick to it.",
   time: "Real plans leave spare days for weather and breakdowns.",
+  night: "A real Moon night lasts 14 days. Batteries are vital.",
   returned: "Turning back safely is a real astronaut skill.",
   success: "Engineers plan for the worst day, not the average day.",
 };
@@ -77,7 +76,7 @@ export class Debrief extends Phaser.Scene {
     F.button(400, 338, "SOURCES", () => this.scene.start("Credits", { from: "Debrief" }), { w: 130, h: 36, icon: "science" });
     F.button(554, 338, "PLAY AGAIN", () => this.again(), { w: 156, h: 36, key: "R", icon: "home" });
     this.body = null;
-    this.pages = [() => this.pageReport(), () => this.pageWhy(), () => this.pageScience()];
+    this.pages = [() => this.pageReport(), () => this.pageChoices(), () => this.pageWhy(), () => this.pageScience()];
     this.draw();
     F.focusFirst(this.nextButton);
     sfx(this.kind === "evacuated" ? "bad" : "win");
@@ -96,14 +95,46 @@ export class Debrief extends Phaser.Scene {
     this.pageDots.clear();
     for (let i = 0; i < this.pages.length; i += 1) {
       this.pageDots.fillStyle(i === this.page ? PALETTE.accent : 0x3a4658, 1);
-      this.pageDots.fillCircle(588 + i * 18, 20, 5);
+      this.pageDots.fillCircle(570 + i * 18, 20, 5);
     }
     this.pages[this.page]();
   }
 
   again() {
     this.registry.remove("outpostX");
-    this.scene.start("Briefing");
+    this.scene.start("Scenario");
+  }
+
+  /** Every day's choice, and whether it was the best call for that day. */
+  pageChoices() {
+    const B = this.body;
+    const s = this.state;
+    const calls = goodCalls(s);
+    B.text(20, 48, `YOUR CHOICES: ${calls.good} OF ${calls.total} BEST CALLS`, { color: TEXT.accent, size: UI.big });
+    const g = B.gfx();
+    const list = (s.decisions ?? []).slice(0, 10);
+    const colW = Math.min(60, Math.floor(600 / Math.max(1, list.length)));
+    list.forEach((d, i) => {
+      const x = 22 + i * colW;
+      B.text(x + 24, 80, `D${d.day}`, { origin: 0.5, color: TEXT.muted });
+      g.fillStyle(0x0b1018, 1);
+      g.fillRect(x, 102, 48, 48);
+      g.lineStyle(2, d.good ? PALETTE.good : PALETTE.warn, 1);
+      g.strokeRect(x, 102, 48, 48);
+      drawIcon(g, ACTIONS[d.option]?.icon ?? "info", x + 6, 108, 3);
+      drawIcon(g, d.good ? "check" : "cross", x + 18, 158, 1);
+      if (!d.good) {
+        B.text(x + 24, 176, "BEST", { origin: 0.5, color: TEXT.muted });
+        g.fillStyle(0x0b1018, 1);
+        g.fillRect(x + 8, 196, 32, 32);
+        drawIcon(g, ACTIONS[d.best]?.icon ?? "info", x + 12, 200, 2);
+      }
+    });
+    if (list.length === 0) B.text(20, 100, "No days were played.", { color: TEXT.muted });
+    // The best move for this mission.
+    const tip = scenarioOf({ scenarioId: s.scenarioId }).tip;
+    drawChips(B, 20, 250, [["star", tip, TEXT.good]], { size: UI.big, maxWidth: 600 });
+    B.text(20, 282, "Green: best call. Orange: another choice was better.", { color: TEXT.muted });
   }
 
   pageReport() {
@@ -123,7 +154,7 @@ export class Debrief extends Phaser.Scene {
     const stats = [
       ["calendar", `${s.stats.daysSurvived}/${s.totalDays} DAYS`],
       ["camera", `${s.photosTaken}/${PHOTO.TARGETS} PHOTOS`],
-      ["science", `${Math.round(s.science)} SCIENCE`],
+      ["star", `${goodCalls(s).good}/${goodCalls(s).total} BEST CALLS`],
       ["dose", `${s.doseMSv.toFixed(1)} mSv`],
       ["crate", `${leftovers(s)} SPARE`],
     ];
@@ -159,9 +190,7 @@ export class Debrief extends Phaser.Scene {
     });
 
     y = Math.max(y + 2, 244);
-    const ceres = B.gfx();
-    drawCeres(ceres, 0, 0);
-    ceres.setPosition(36, y + 34);
+    drawIcon(B.gfx(), "question", 24, y + 4, 2);
     B.text(64, y, "TRY THIS", { color: TEXT.accent });
     for (const hint of retryHints(s).slice(0, 2)) {
       const text = B.text(64, y + 18, hint, { wrap: 550, color: TEXT.good });
@@ -204,7 +233,7 @@ export class Debrief extends Phaser.Scene {
       }
     }
 
-    const lesson = LESSONS[this.kind === "success" ? "success" : s.outcome?.cause] ?? LESSONS.success;
+    const lesson = LESSONS[this.kind === "success" ? "success" : s.stats.nightPowerOut > 0 ? "night" : s.outcome?.cause] ?? LESSONS.success;
     y = Math.max(y + 4, 232);
     drawChips(B, 20, y, [["star", lesson, TEXT.white]], { size: UI.body });
     const tag = pickFactTag(s);

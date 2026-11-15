@@ -1,146 +1,102 @@
-// Mission scenarios. To add one, add an object to SCENARIOS: no other code
+﻿// Mission scenarios. To add one, add an object to SCENARIOS: no other code
 // needs to change. Pure data: no Phaser here, so the tests can check it.
+//
+// The four missions are also the difficulty ladder (stars), so there is no
+// separate difficulty picker.
 //
 // Shape of a scenario:
 // {
-//   id:       unique string
-//   mode:     "real" (a real date from NASA records) or "custom"
-//   title:    short name on the card (2-3 words)
-//   icon:     an icon id from src/ui/icons.js
-//   story:    one line for the card, 12 words or fewer
-//   donki:    which cached DONKI file to read ("calm", "busy", "storm", "recent", "archive")
-//   deck:     the extra hazard cards that can happen (ids from DECK_CARDS)
-//   goals:    [{ icon, text }] shown on the briefing; "{days}" is filled in
-//   difficulty: { easy, medium, hard } each { days, maxEvents, budget }
-//               maxEvents = most alerts in the whole mission (null = every real event)
-//   facts:    glossary ids worth reading for this mission
+//   id:        unique string
+//   title:     short name on the card (2-3 words)
+//   icon:      an icon id from src/ui/icons.js
+//   story:     one line for the card, 12 words or fewer
+//   stars:     1-3, how hard it is
+//   donki:     which cached DONKI file to read ("calm", "busy", "storm", "recent")
+//   deck:      the extra hazard cards that can happen (ids from DECK_CARDS)
+//   days:      mission length; the lunar night is the last `nightDays` days
+//   nightDays: how long the lunar night lasts
+//   maxEvents: most alerts in the whole mission
+//   budget:    points to pack the ship with
+//   info:      the info card id for the card's "i" button
+//   tip:       the best move for this mission, shown in the debrief (12 words max)
 // }
-
-export const DIFFICULTY_IDS = ["easy", "medium", "hard"];
-
-/**
- * The same three levels for every real scenario. Harder = more alerts, fewer
- * points to pack with, and fewer days to build everything before the launch
- * window closes. (Checked by the balance tests: each level can be won.)
- */
-export const STANDARD_DIFFICULTY = {
-  easy: { days: 10, maxEvents: 2, budget: 120 },
-  medium: { days: 9, maxEvents: 4, budget: 100 },
-  hard: { days: 8, maxEvents: 6, budget: 90 },
-};
-
-const BASE_GOALS = [
-  { icon: "calendar", text: "Survive {days} days" },
-  { icon: "build", text: "Build 6 buildings" },
-  { icon: "camera", text: "Photograph 5 craters" },
-];
 
 export const SCENARIOS = [
   {
     id: "calm-2019",
-    mode: "real",
     title: "Calm Sun",
     icon: "moon",
     story: "December 2019: the Sun at its quietest.",
+    stars: 1,
     donki: "calm",
-    deck: ["meteor", "dust", "leak"],
-    goals: BASE_GOALS,
-    difficulty: STANDARD_DIFFICULTY,
-    facts: ["space-weather", "sun"],
+    deck: ["meteor", "dust"],
+    days: 8,
+    nightDays: 2,
+    maxEvents: 2,
+    budget: 110,
+    info: "mission.calm",
+    tip: "A calm Sun: build fast and keep every slot busy.",
   },
   {
     id: "busy-2021",
-    mode: "real",
     title: "Busy Sun",
     icon: "sun",
     story: "July 2021: a big flare wakes the Sun.",
+    stars: 2,
     donki: "busy",
     deck: ["meteor", "dust", "comms"],
-    goals: BASE_GOALS,
-    difficulty: STANDARD_DIFFICULTY,
-    facts: ["solar-flare", "space-weather"],
-  },
-  {
-    id: "gannon-2024",
-    mode: "real",
-    title: "Solar Storm!",
-    icon: "dose",
-    story: "May 2024: the biggest storm in 20 years.",
-    donki: "storm",
-    deck: ["meteor", "temp", "comms"],
-    goals: BASE_GOALS,
-    difficulty: STANDARD_DIFFICULTY,
-    facts: ["solar-flare", "aurora-borealis", "particle"],
+    days: 8,
+    nightDays: 2,
+    maxEvents: 3,
+    budget: 100,
+    info: "mission.busy",
+    tip: "Hide from flares, then build hard on quiet days.",
   },
   {
     id: "recent",
-    mode: "real",
     title: "This Month",
     icon: "calendar",
     story: "The newest space weather we saved.",
+    stars: 2,
     donki: "recent",
     deck: ["meteor", "dust", "plant"],
-    goals: BASE_GOALS,
-    difficulty: STANDARD_DIFFICULTY,
-    facts: ["space-weather"],
+    days: 8,
+    nightDays: 2,
+    maxEvents: 3,
+    budget: 100,
+    info: "mission.recent",
+    tip: "Real, recent space weather: check the Sun and plan ahead.",
+  },
+  {
+    id: "gannon-2024",
+    title: "Solar Storm!",
+    icon: "dose",
+    story: "May 2024: the biggest storm in 20 years.",
+    stars: 3,
+    donki: "storm",
+    deck: ["meteor", "temp"],
+    days: 9,
+    nightDays: 3,
+    maxEvents: 4,
+    budget: 100,
+    info: "mission.storm",
+    tip: "Shelter from big storms and charge up for the long night.",
   },
 ];
 
-/** The Custom mode: the player picks the hazards, days, events and Sun. */
-export const CUSTOM = {
-  id: "custom",
-  mode: "custom",
-  title: "Custom",
-  icon: "build",
-  story: "You choose the dangers.",
-  goals: BASE_GOALS,
-  suns: [
-    { donki: "calm", title: "CALM SUN", icon: "moon" },
-    { donki: "busy", title: "BUSY SUN", icon: "sun" },
-    { donki: "storm", title: "STORM", icon: "dose" },
-    { donki: "archive", title: "RANDOM", icon: "question" },
-  ],
-  days: [5, 7, 10],
-  events: [2, 4, 6],
-  budget: 100,
-};
-
 export function scenarioById(id) {
-  if (id === CUSTOM.id) return CUSTOM;
   return SCENARIOS.find((s) => s.id === id) ?? SCENARIOS[0];
 }
 
-/** Goals with {days} filled in. */
-export function goalsFor(scenario, days) {
-  return (scenario.goals ?? BASE_GOALS).map((goal) => ({ ...goal, text: goal.text.replace("{days}", String(days)) }));
-}
-
-/**
- * Turn a scenario choice into the mission settings the game runs on.
- * custom: { donki, days, events, deck } chosen by the player.
- */
-export function missionFromScenario(scenario, difficulty = "medium", custom = {}) {
-  if (scenario.mode === "custom") {
-    return {
-      scenarioId: CUSTOM.id,
-      mode: "custom",
-      difficulty: "custom",
-      dateId: custom.donki ?? "busy",
-      totalDays: custom.days ?? 7,
-      maxEvents: custom.events ?? 4,
-      budget: CUSTOM.budget,
-      deck: custom.deck ?? ["meteor", "dust", "leak"],
-    };
-  }
-  const level = scenario.difficulty[difficulty] ?? scenario.difficulty.medium;
+/** Turn a scenario into the mission settings the game runs on. */
+export function missionFromScenario(scenario) {
   return {
     scenarioId: scenario.id,
-    mode: "real",
-    difficulty,
     dateId: scenario.donki,
-    totalDays: level.days,
-    maxEvents: level.maxEvents,
-    budget: level.budget,
+    totalDays: scenario.days,
+    nightDays: scenario.nightDays,
+    maxEvents: scenario.maxEvents,
+    budget: scenario.budget,
     deck: [...scenario.deck],
   };
 }

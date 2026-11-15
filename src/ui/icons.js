@@ -1,4 +1,4 @@
-// Pixel icons drawn with shapes. Every resource has its own shape AND colour,
+﻿// Pixel icons drawn with shapes. Every resource has its own shape AND colour,
 // so the HUD still reads for colour-blind players. Icons live on a 12x12 grid.
 
 export const ICON_COLOR = {
@@ -15,7 +15,7 @@ export const ICON_COLOR = {
 /** The icon that stands for each blueprint or kit. */
 export const ITEM_ICON = {
   solar: "power", water: "water", oxygen: "oxygen", air: "air", greenhouse: "food", shield: "shield",
-  rover: "rover", antenna: "dish", battery: "battery", spares: "wrench", foodpack: "crate",
+  rover: "rover", battery: "battery", spares: "wrench", foodpack: "crate",
 };
 
 /** Draw icon `id` in a 12x12 box whose top-left corner is x, y. */
@@ -187,6 +187,25 @@ export function drawIcon(g, id, x, y, scale = 1) {
       break;
     case "orbit":
       color(0x4ca7d8); px(4, 4, 4, 4); color(0x8d98ab); px(0, 5, 1, 2); px(11, 5, 1, 2); px(2, 1, 8, 1); px(2, 10, 8, 1); color(0xffd166); px(9, 0, 2, 2);
+      break;
+    case "gear": // settings
+      color(0xdfe7f2); px(5, 0, 2, 2); px(5, 10, 2, 2); px(0, 5, 2, 2); px(10, 5, 2, 2); px(2, 2, 2, 2); px(8, 2, 2, 2); px(2, 8, 2, 2); px(8, 8, 2, 2);
+      px(3, 2, 6, 8); px(2, 3, 8, 6); color(0x1b2029); px(5, 5, 2, 2);
+      break;
+    case "pause":
+      color(0xdfe7f2); px(2, 1, 3, 10); px(7, 1, 3, 10);
+      break;
+    case "restart": // a circular arrow
+      color(0xffd166); px(3, 1, 6, 2); px(1, 3, 2, 6); px(3, 9, 6, 2); px(9, 6, 2, 3); px(8, 0, 1, 5); px(9, 2, 3, 1);
+      break;
+    case "door": // leave
+      color(0xff8c42); px(1, 0, 7, 12); color(0x1b2029); px(2, 1, 5, 11); color(0xff8c42); px(5, 6, 1, 1); color(0x5ce7a0); px(8, 5, 4, 2); px(10, 3, 1, 6);
+      break;
+    case "up":
+      color(0x5ce7a0); px(5, 0, 2, 2); px(4, 2, 4, 2); px(2, 4, 8, 2); px(5, 6, 2, 6);
+      break;
+    case "down":
+      color(0xff5d5d); px(5, 0, 2, 6); px(2, 6, 8, 2); px(4, 8, 4, 2); px(5, 10, 2, 2);
       break;
     default:
       px(2, 2, 8, 8);

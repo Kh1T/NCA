@@ -1,8 +1,8 @@
-import Phaser from "phaser";
+﻿import Phaser from "phaser";
 import { GROUND_Y, HEIGHT, PALETTE, TEXT, UI, WIDTH, textStyle } from "../constants.js";
 import { getCraters, preloadCraterImages } from "../data/nasa.js";
 import { Viewfinder } from "../minigames/Viewfinder.js";
-import { PHOTO, clockRate, coldRate } from "../sim/rules.js";
+import { PHOTO, coldRate } from "../sim/rules.js";
 import { drawRover } from "../ui/art.js";
 import { drawGround, drawHills, drawStars } from "../ui/backdrop.js";
 import { drawChips } from "../ui/chips.js";
@@ -11,6 +11,8 @@ import { TouchPad } from "../ui/TouchPad.js";
 import { Cockpit } from "../ui/Cockpit.js";
 import { ICON_COLOR, drawIcon } from "../ui/icons.js";
 import { Layer, clearFocusFor, dialog } from "../ui/kit.js";
+import { openSettings } from "../ui/Settings.js";
+import { markSeen, seen } from "../utils/progress.js";
 import { playMusic, sfx, startEngine } from "../ui/sfx.js";
 
 const WORLD_W = 2140;
@@ -22,10 +24,11 @@ const DRIVE = 210;
 const JUMP = -150;
 
 /**
- * Phase 3: the crater photo race on the far side. Drive the rover, hop out,
- * climb to each camera spot, frame the photo, and be back inside the rover
- * before the clock runs out. The far side is bitterly cold: the suit loses
- * heat faster the farther you are from the rover.
+ * A rover trip to the far side craters. Drive the rover, hop out, climb to a
+ * camera spot, frame the photo, and get back in the rover. There is no clock:
+ * the limits are the suit's heat (it cools faster the farther you walk from
+ * the rover) and the rover's battery. Photos are kept between trips, so a
+ * trip can be short. HOME ends the trip and the day goes on at the base.
  */
 export class PhotoMission extends Phaser.Scene {
   constructor() {
@@ -43,9 +46,9 @@ export class PhotoMission extends Phaser.Scene {
   create() {
     this.events.once("shutdown", () => clearFocusFor(this));
     const state = this.state;
-    this.timeLeft = PHOTO.TIME_SEC;
     this.heat = PHOTO.SUIT_HEAT;
     this.battery = state.roverBattery || PHOTO.ROVER_BATTERY_BASE;
+    this.startPhotos = state.photosTaken;
     this.inRover = true;
     this.paused = true;
     this.ended = false;
@@ -79,7 +82,13 @@ export class PhotoMission extends Phaser.Scene {
     this.add.text(ROCK_FIELD + 45, GROUND_Y + 8, "TOO ROCKY FOR THE ROVER", textStyle(16, "#16181c")).setOrigin(0.5, 0);
 
     // Five camera spots, each on a ledge you have to climb.
-    const craters = Phaser.Utils.Array.Shuffle([...getCraters(this)]).slice(0, PHOTO.TARGETS);
+    // The same five craters on every trip of this mission.
+    const all = getCraters(this);
+    if (!state.craterPick || state.craterPick.length < PHOTO.TARGETS) {
+      state.craterPick = Phaser.Utils.Array.Shuffle([...all.keys()]).slice(0, PHOTO.TARGETS);
+    }
+    const craters = state.craterPick.map((i) => all[i]).filter(Boolean);
+    if (!state.spotsDone) state.spotsDone = [false, false, false, false, false];
     this.targets = TARGET_X.map((x, i) => {
       const high = i % 2 === 1;
       // A stack of ledges that all overlap above x: stand there and jump
@@ -91,7 +100,7 @@ export class PhotoMission extends Phaser.Scene {
       const spotX = x + 14;
       const g = this.add.graphics();
       const label = this.add.text(spotX, topY - 44, `PHOTO ${i + 1}`, textStyle(16, TEXT.accent)).setOrigin(0.5, 0);
-      const target = { index: i, x: spotX, climbX: x, y: topY - 4, g, label, done: false, crater: craters[i] ?? { name: `Crater ${i + 1}`, nasaId: "none", kidFact: "", credit: "NASA", mission: "", link: null } };
+      const target = { index: i, x: spotX, climbX: x, y: topY - 4, g, label, done: Boolean(state.spotsDone[i]), crater: craters[i] ?? { name: `Crater ${i + 1}`, nasaId: "none", kidFact: "", credit: "NASA", mission: "", link: null } };
       this.drawSpot(target);
       // Tap or click a flag to walk there and climb up.
       const hit = this.add.rectangle(spotX, topY - 20, 44, 48, 0, 0.001).setInteractive({ useHandCursor: true });
@@ -134,14 +143,19 @@ export class PhotoMission extends Phaser.Scene {
     this.showIntro();
   }
 
-  /** Three picture panels instead of a page of rules. */
+  /** Three picture panels instead of a page of rules (first trip only). */
   showIntro() {
+    if (seen("photo-trip")) {
+      this.paused = false;
+      return;
+    }
+    markSeen("photo-trip");
     const L = new Layer(this, { depth: 300, fixed: true, keys: true });
     L.dim(0.75);
     L.panel(70, 40, 500, 280, { edge: PALETTE.accent, alpha: 1 });
-    L.text(WIDTH / 2, 48, "PHOTO RACE!", { size: UI.title, color: TEXT.accent, origin: 0.5 });
+    L.text(WIDTH / 2, 48, "PHOTO TRIP!", { size: UI.title, color: TEXT.accent, origin: 0.5 });
     infoButton(L, 544, 64, "place.farside", { focus: false });
-    const steps = [["rover", "DRIVE TO A FLAG"], ["camera", "CLIMB UP, SNAP!"], ["cold", "BACK BEFORE YOU FREEZE"]];
+    const steps = [["rover", "DRIVE TO A FLAG"], ["camera", "CLIMB UP, SNAP!"], ["cold", "WARM UP IN THE ROVER"]];
     const g = L.gfx();
     steps.forEach(([icon, line], i) => {
       const cx = 160 + i * 160;
@@ -153,7 +167,7 @@ export class PhotoMission extends Phaser.Scene {
       L.text(cx - 52, 104, String(i + 1), { origin: [0.5, 0.5], color: "#05060a" });
       L.text(cx, 210, line, { origin: 0.5, wrap: 140, align: "center" });
     });
-    drawChips(L, 168, 252, [["clock", `${PHOTO.TIME_SEC} SECONDS`], ["camera", `${PHOTO.TARGETS} PHOTOS`]]);
+    drawChips(L, 150, 252, [["camera", `${PHOTO.TARGETS - this.state.photosTaken} PHOTOS LEFT`], ["home", "HOME ANY TIME"]]);
     const go = L.button(WIDTH / 2, 294, "GO!", () => {
       L.destroy();
       this.paused = false;
@@ -187,17 +201,16 @@ export class PhotoMission extends Phaser.Scene {
     const H = (this.hud = new Layer(this, { depth: 100, fixed: true, keys: true }));
     H.rect(0, 0, WIDTH, 58, 0x05060a, 0.92);
     const icons = H.gfx();
-    drawIcon(icons, "clock", 6, 8, 1.4);
-    drawIcon(icons, "thermo", 170, 8, 1.4);
-    drawIcon(icons, "battery", 334, 8, 1.4);
-    drawIcon(icons, "camera", 500, 8, 1.4);
+    drawIcon(icons, "thermo", 6, 8, 1.4);
+    drawIcon(icons, "battery", 180, 8, 1.4);
+    drawIcon(icons, "camera", 354, 8, 1.4);
     this.bars = H.gfx();
-    this.timeText = H.text(160, 2, "", { origin: 1, size: UI.big });
-    this.heatText = H.text(324, 2, "", { origin: 1, size: UI.big });
-    this.batteryText = H.text(488, 2, "", { origin: 1, size: UI.big });
-    this.photoText = H.text(524, 2, "", { color: TEXT.accent, size: UI.big });
-    drawIcon(icons, "dose", 574, 8, 1.2);
-    this.doseText = H.text(634, 4, "", { origin: 1, color: TEXT.muted });
+    this.heatText = H.text(170, 2, "", { origin: 1, size: UI.big });
+    this.batteryText = H.text(344, 2, "", { origin: 1, size: UI.big });
+    this.photoText = H.text(378, 2, "", { color: TEXT.accent, size: UI.big });
+    drawIcon(icons, "dose", 446, 8, 1.2);
+    this.doseText = H.text(466, 4, "", { color: TEXT.muted });
+    H.iconButton(616, 22, "gear", () => this.openSettingsPanel(), { size: 36 });
     this.guide = H.text(6, 34, "", { color: TEXT.good });
     // Head home: a button as well as the H key, so touch players can use it.
     this.homeButton = H.button(584, 196, "HOME", () => this.headHome(), { w: 100, h: 34, icon: "home" });
@@ -216,10 +229,8 @@ export class PhotoMission extends Phaser.Scene {
         for (let nx = x + 3; nx < x + 132 * share; nx += 6) g.fillRect(nx, 26, 2, 7);
       }
     };
-    bar(28, this.timeLeft / PHOTO.TIME_SEC, PALETTE.accent, this.timeLeft < 30);
-    bar(192, this.heat / PHOTO.SUIT_HEAT, 0xff8c42, this.heat < 25);
-    bar(356, this.battery / 100, ICON_COLOR.power, this.battery < 10);
-    this.timeText.setText(`${Math.ceil(this.timeLeft)}s`);
+    bar(28, this.heat / PHOTO.SUIT_HEAT, 0xff8c42, this.heat < 25);
+    bar(202, this.battery / 100, ICON_COLOR.power, this.battery < 10);
     this.heatText.setText(this.heat <= 0 ? "COLD!" : `${Math.round(this.heat)}`);
     this.batteryText.setText(`${Math.round(this.battery)}%`);
     const state = this.state;
@@ -229,12 +240,12 @@ export class PhotoMission extends Phaser.Scene {
     this.cockpit?.show(this.inRover && !this.ended);
 
     let guide;
-    if (this.inRover && state.photosTaken >= PHOTO.TARGETS) guide = "All 5 photos! You made it back.";
+    if (this.inRover && state.photosTaken >= PHOTO.TARGETS) guide = "All 5 photos! Heading home.";
+    else if (this.inRover && this.battery <= 0) guide = "Rover battery empty! Tap HOME.";
     else if (this.inRover && this.roverX > ROCK_FIELD - 80) guide = "Too rocky! Get out (E) or head HOME.";
     else if (this.inRover) guide = "Drive to a flag. Press E to get out.";
-    else if (this.heat <= 0) guide = "Suit too cold! Get back to the rover!";
     else if (this.heat < 35) guide = "Suit heat is low. Warm up in the rover.";
-    else if (state.photosTaken >= PHOTO.TARGETS) guide = "All 5 photos! Get back in the rover (E).";
+    else if (state.photosTaken >= PHOTO.TARGETS) guide = "All 5 photos! Get back in the rover.";
     else guide = "Climb to a flag and press E. Stay near the rover.";
     this.guide.setText(guide).setColor(this.heat < 35 && !this.inRover ? TEXT.danger : TEXT.good);
     this.cold.setAlpha(this.inRover ? 0 : Phaser.Math.Clamp((40 - this.heat) / 40, 0, 1) * 0.28);
@@ -283,17 +294,18 @@ export class PhotoMission extends Phaser.Scene {
     this.player.body.enable = false;
     this.cameraSpot.setPosition(this.roverX, GROUND_Y - 30);
     this.cameras.main.startFollow(this.cameraSpot, true, 0.12, 0.12, 0, 40);
-    if (this.state.photosTaken >= PHOTO.TARGETS) this.finish("success", null);
+    if (this.state.photosTaken >= PHOTO.TARGETS) this.endTrip("done");
   }
 
   takePhoto(target) {
     this.player.setVelocity(0, 0);
     this.player.anims.stop();
-    // The clock keeps running while you frame the shot, and pauses for the reveal.
+    // The suit keeps cooling while you frame the shot, and waits during the reveal.
     this.viewfinder = new Viewfinder(this, target.crater, {
       onSnap: ({ stars }) => {
         const state = this.state;
         target.done = true;
+        state.spotsDone[target.index] = true;
         this.drawSpot(target);
         state.photosTaken += 1;
         state.photos.push({ name: target.crater.name, nasaId: target.crater.nasaId, stars });
@@ -313,42 +325,80 @@ export class PhotoMission extends Phaser.Scene {
     const taken = this.state.photosTaken;
     this.paused = true;
     dialog(this, {
-      title: "HEAD HOME?",
+      title: "BACK TO BASE?",
       icon: "home",
       body: `You have ${taken} of ${PHOTO.TARGETS} photos.`,
       buttons: [
         { label: "KEEP GOING", onClick: () => { this.paused = false; } },
-        { label: "GO HOME", icon: "home", onClick: () => this.finish("partial", "returned") },
+        { label: "GO HOME", icon: "home", onClick: () => this.endTrip("home") },
       ],
     });
   }
 
-  finish(kind, cause) {
+  openSettingsPanel() {
+    if (this.paused || this.ended) return;
+    this.paused = true;
+    openSettings(this, {
+      onClose: () => { this.paused = false; },
+      leaveLabel: "END TRIP",
+      leaveAsk: false,
+      onLeave: () => {
+        if (!this.inRover) this.enterRoverQuietly();
+        this.endTrip("home");
+      },
+    });
+  }
+
+  enterRoverQuietly() {
+    this.inRover = true;
+    this.player.setVisible(false).setVelocity(0, 0);
+    this.player.body.enable = false;
+  }
+
+  /**
+   * The trip is over: photos are kept, and the day goes on at the base.
+   * why: "done" (all photos), "home" (chose to go back), "cold" (the suit got too cold)
+   */
+  endTrip(why) {
     if (this.ended) return;
     this.ended = true;
     this.engine?.stop();
     this.engine = null;
     this.cockpit?.show(false);
+    this.viewfinder?.cleanup();
     const state = this.state;
     state.doseMSv = Math.round(state.doseMSv * 100) / 100;
-    state.outcome = { kind, cause };
-    state.log.push({ day: state.day, type: kind === "evacuated" ? "evacuated" : "mission-end", cause });
-    this.viewfinder?.cleanup();
-    if (kind === "evacuated") {
-      sfx("bad");
-      this.scene.start("Evacuated");
-      return;
-    }
-    sfx("win");
+    const got = state.photosTaken - this.startPhotos;
+    state.log.push({ day: state.day, type: "trip-end", photos: got, why });
+    this.registry.set("tripDone", true);
+    sfx(got > 0 ? "win" : "done");
     this.paused = true;
+    const titles = { done: "ALL 5 PHOTOS!", home: "TRIP DONE!", cold: "TOO COLD!" };
+    const bodies = {
+      done: "Every crater photographed! Back to base.",
+      home: `+${got} photo${got === 1 ? "" : "s"} this trip. ${state.photosTaken} of ${PHOTO.TARGETS} in all.`,
+      cold: `Your suit got too cold. +${got} photo${got === 1 ? "" : "s"}. Back to base.`,
+    };
     dialog(this, {
-      title: kind === "success" ? "ALL 5 PHOTOS!" : "SAFE IN THE ROVER",
-      icon: kind === "success" ? "medal" : "rover",
-      body: kind === "success" ? "Back in the rover with every photo!" : `Safe with ${state.photosTaken} photo${state.photosTaken === 1 ? "" : "s"}.`,
-      buttons: [{ label: "RESULTS", icon: "play", onClick: () => this.scene.start("Debrief") }],
+      title: titles[why],
+      icon: why === "done" ? "medal" : why === "cold" ? "cold" : "rover",
+      body: bodies[why],
+      buttons: [{ label: "BACK TO BASE", icon: "home", onClick: () => this.scene.start("Outpost") }],
     });
   }
 
+  /** Only a huge radiation dose ends the whole mission from out here. */
+  evacuate() {
+    if (this.ended) return;
+    this.ended = true;
+    this.engine?.stop();
+    this.viewfinder?.cleanup();
+    const state = this.state;
+    state.outcome = { kind: "evacuated", cause: "dose" };
+    state.log.push({ day: state.day, type: "evacuated", cause: "dose" });
+    sfx("bad");
+    this.scene.start("Evacuated");
+  }
   update(time, delta) {
     const dt = delta / 1000;
     const k = this.keys;
@@ -371,8 +421,7 @@ export class PhotoMission extends Phaser.Scene {
     }
 
     const state = this.state;
-    // The clock: faster when the suit has gone cold.
-    this.timeLeft -= dt * (this.inRover ? 1 : clockRate(this.heat));
+    // No clock: the suit cools outside and warms up in the rover.
     if (this.inRover) {
       this.heat = Math.min(PHOTO.SUIT_HEAT, this.heat + PHOTO.WARM_RATE * dt);
     } else {
@@ -381,14 +430,14 @@ export class PhotoMission extends Phaser.Scene {
     state.doseMSv += PHOTO.DOSE_PER_SEC * dt * (this.inRover ? 0.4 : 1);
 
     if (state.doseMSv > state.doseLimit) {
-      this.finish("evacuated", "dose");
+      this.evacuate();
       return;
     }
-    if (this.timeLeft <= 0) {
-      this.timeLeft = 0;
+    if (!this.inRover && this.heat <= 0) {
+      // Too cold: the rover drives over and picks you up, and the trip ends.
       this.updateHud();
-      if (this.inRover) this.finish(state.photosTaken >= PHOTO.TARGETS ? "success" : "partial", "returned");
-      else this.finish("evacuated", "timer");
+      this.enterRoverQuietly();
+      this.endTrip("cold");
       return;
     }
     this.updateHud();
@@ -422,7 +471,7 @@ export class PhotoMission extends Phaser.Scene {
         moving: direction !== 0 && this.battery > 0,
         battery: this.battery / 100,
         heat: this.heat / PHOTO.SUIT_HEAT,
-        time: this.timeLeft / PHOTO.TIME_SEC,
+        time: state.photosTaken / PHOTO.TARGETS,
       });
       this.prompt.setText(this.registry.get("touchUsed") ? "TAP: GET OUT" : "E: GET OUT").setPosition(this.roverX, GROUND_Y - 44).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(k.h)) this.headHome();

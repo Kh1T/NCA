@@ -1,36 +1,41 @@
-// Dev tool: prints a day-by-day trace of the helper plan on a date preset.
-// Usage: node scripts/balance-trace.js [calm|busy|storm|recent] [days] [shelter|work] [deck:all|none] [seed]
+// Play one mission with a simple bot and print each day. For balancing.
+// node scripts/balance-trace.js [scenarioId] [best|work|nocharge|shelter] [seed]
 import fs from "node:fs";
-import { ALERTS, DECK_CARDS, alertsForToday, applyAlertResult, buildSchedule, onAlertStart } from "../src/sim/events.js";
-import { advanceDay, autoBuild, autoPlan } from "../src/sim/rules.js";
+import path from "node:path";
+import { missionStartDate } from "../src/data/nasa.js";
+import { SCENARIOS, missionFromScenario, scenarioById } from "../src/data/scenarios.js";
+import { starterPlan } from "../src/sim/buildings.js";
+import { ALERTS, alertsForToday, applyAlertResult, buildSchedule, onAlertStart } from "../src/sim/events.js";
+import { PHOTO, advanceDay, autoBuild, dayCard, recordChoice } from "../src/sim/rules.js";
 import { createState } from "../src/sim/state.js";
 
-const [dateId = "calm", days = "7", flareChoice = "smart", deckArg = "none", seedArg = "7"] = process.argv.slice(2);
-const totalDays = Number(days);
-const file = JSON.parse(fs.readFileSync(new URL(`../public/data/donki/${dateId}.json`, import.meta.url), "utf8"));
-const deck = deckArg === "all" ? DECK_CARDS : [];
-const packed = { solar: 1, water: 1, oxygen: 1, air: 1, greenhouse: 1, shield: 1, rover: 1 };
-const schedule = buildSchedule({ donki: file, missionDate: file.startDate, totalDays, weatherDeck: deck, seed: Number(seedArg) });
-let state = createState({ packed, weatherDeck: deck, missionDate: file.startDate, totalDays, seed: Number(seedArg), schedule });
+const [id = SCENARIOS[0].id, bot = "best", seedArg = "11"] = process.argv.slice(2);
+const mission = missionFromScenario(scenarioById(id));
+const file = JSON.parse(fs.readFileSync(path.resolve("public/data/donki", `${mission.dateId}.json`), "utf8"));
+const seed = Number(seedArg);
+const missionDate = missionStartDate(file, mission.dateId, mission.totalDays, 0.5);
+const schedule = buildSchedule({ donki: file, missionDate, totalDays: mission.totalDays, weatherDeck: mission.deck, seed, maxEvents: mission.maxEvents });
+let state = createState({ packed: starterPlan(mission.budget), weatherDeck: mission.deck, missionDate, totalDays: mission.totalDays, nightDays: mission.nightDays, seed, schedule });
 
-console.log("day  pow  oxy  air  wat  food dose  sci  builds / events");
-while (!state.outcome && state.day <= totalDays) {
+while (!state.outcome) {
   autoBuild(state);
-  const events = [];
-  for (const event of alertsForToday(state).alerts) {
+  const card = dayCard(state);
+  let action = card.best;
+  if (bot === "work") action = card.options.includes("work") ? "work" : card.options[0];
+  if (bot === "nocharge" && (action === "charge" || action === "save")) action = card.options.find((o) => o !== "charge" && o !== "save");
+  recordChoice(state, card, action);
+  const alerts = alertsForToday(state).alerts;
+  for (const event of alerts) {
     onAlertStart(state, event);
-    const urgent = ["oxygen", "air", "water"].some((key) => state[key] < 2.2 && state.buildings[key].status !== "done");
-    // A pattern like "wwssw" gives one choice per mission day (w = work, s = shelter).
-    const byDay = /^[ws]+$/.test(flareChoice) ? (flareChoice[state.day - 1] === "w" ? "work" : "shelter") : null;
-    const flare = byDay ?? (flareChoice === "smart" ? (urgent ? "work" : "shelter") : flareChoice);
-    const option = event.id === "flare" ? flare : ALERTS[event.id].options[0].id;
+    const smartWork = bot === "smart" && event.level === "M";
+    const option = event.id === "flare" ? (bot === "work" || smartWork ? "work" : "shelter") : ALERTS[event.id].options[0].id;
     applyAlertResult(state, event, { option, quality: 1, refill: 0.5 });
-    events.push(event.id === "flare" ? `flare:${event.level}:${option}` : event.id);
   }
-  const { state: next, report } = advanceDay(state, autoPlan(state));
-  const f = (n) => String(n.toFixed(1)).padStart(4);
-  console.log(`${String(report.day).padStart(3)} ${f(next.power)} ${f(next.oxygen)} ${f(next.air)} ${f(next.water)} ${f(next.food)} ${f(next.doseMSv)} ${f(next.science)}  done:[${report.completed}] active:[${next.buildQueue}] ${events.join(",")} alloc:${JSON.stringify(report.alloc)} ${report.action}`);
+  if (action === "trip") state.photosTaken = Math.min(PHOTO.TARGETS, state.photosTaken + 3);
+  const day = state.day;
+  const { state: next, report } = advanceDay(state, { action });
   state = next;
-  if (state.buildings.rover.status === "done") break;
+  const f = (n) => String(Math.round(n * 10) / 10).padStart(4);
+  console.log(`D${day}${day >= state.nightStart ? "N" : " "} ${card.id.padEnd(6)} ${action.padEnd(6)} pw${f(state.power)}/${state.batteryCap} O${f(state.oxygen)} A${f(state.air)} W${f(state.water)} F${f(state.food)} dose${f(state.doseMSv)} built:${Object.keys(state.buildings).filter((b) => state.buildings[b].status === "done").length} ph${state.photosTaken} ${alerts.map((a) => a.id).join(",")} ${report.short ? "SHORT" : ""}`);
 }
-console.log("outcome:", JSON.stringify(state.outcome), "rover:", state.buildings.rover.status, "day", state.buildings.rover.doneDay);
+console.log("outcome", JSON.stringify(state.outcome));
