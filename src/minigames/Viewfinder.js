@@ -50,7 +50,7 @@ export class Viewfinder {
     L.focus.arrowsMove = false;
     L.dim(0.8);
     L.panel(120, 34, 400, 290, { edge: PALETTE.accent, alpha: 1 });
-    L.text(320, 42, "FRAME THE TARGET, THEN SNAP!", { origin: 0.5, color: TEXT.accent, size: UI.big });
+    L.text(320, 42, "TAP THE TARGET TO SNAP!", { origin: 0.5, color: TEXT.accent, size: UI.big });
 
     const key = pixelated(scene, `crater-${crater.nasaId}`);
     if (key) {
@@ -71,14 +71,19 @@ export class Viewfinder {
     this.g = L.gfx();
 
     this.keys = scene.input.keyboard.addKeys({ left: "LEFT", right: "RIGHT", up: "UP", down: "DOWN" });
+    this.inView = (p) => p.x >= VIEW.x && p.x <= VIEW.x + VIEW.w && p.y >= VIEW.y && p.y <= VIEW.y + VIEW.h;
     this.onMove = (pointer) => {
-      if (this.snapped) return;
-      if (pointer.x < VIEW.x || pointer.x > VIEW.x + VIEW.w || pointer.y < VIEW.y || pointer.y > VIEW.y + VIEW.h) return;
+      if (this.snapped || !this.inView(pointer)) return;
       this.frame.x = pointer.x;
       this.frame.y = pointer.y;
     };
     scene.input.on("pointermove", this.onMove);
-    scene.input.on("pointerdown", this.onMove);
+    this.onTap = (pointer) => {
+      if (this.snapped || !this.inView(pointer)) return;
+      this.onMove(pointer);
+      this.snap();
+    };
+    scene.input.on("pointerdown", this.onTap);
     this.snapButton = L.button(320, 298, "SNAP!", () => this.snap(), { w: 150, h: 36, key: "SPACE", icon: "camera" });
     L.focus.hotkey("ENTER", () => this.snap());
     L.focusFirst(this.snapButton);
@@ -171,7 +176,7 @@ export class Viewfinder {
 
   cleanup() {
     this.scene.input.off("pointermove", this.onMove);
-    this.scene.input.off("pointerdown", this.onMove);
+    this.scene.input.off("pointerdown", this.onTap);
     this.layer?.destroy();
     this.layer = null;
   }

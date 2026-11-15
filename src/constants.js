@@ -5,17 +5,22 @@ export const WIDTH = 640;
 export const HEIGHT = 360;
 export const GROUND_Y = 300;
 
-export const FONT = '"VT323", monospace';
+export const FONT = '"Jersey 15", monospace'; // headings and buttons: pixel style
+export const FONT_BODY = '"Nunito", sans-serif'; // small text: smooth and easy to read
+/** Text at this size or larger is a heading or button and keeps the pixel font. */
+const HEADING_SIZE = 24;
+/** Nunito looks larger than the pixel font at the same size, so it is scaled down a little. */
+const BODY_SCALE = 0.8;
 
 /**
- * Size rules for a 7–12 audience on desktop and phones (VT323 renders small).
+ * Size rules for a 7–12 audience on desktop and phones (pixel fonts render small).
  * On a phone in landscape the canvas is shown at about 1.1×, so 16 canvas px
  * is about 18 css px and a 40 px button is about 44 css px.
  */
 export const UI = {
-  small: 16, // the smallest text anywhere
-  body: 16,
-  big: 22,
+  small: 18, // the smallest text anywhere
+  body: 18,
+  big: 24,
   title: 32,
   huge: 48,
   button: 32, // default button height
@@ -40,14 +45,14 @@ export const PALETTE = {
 
 export const TEXT = {
   white: "#f2f5fa",
-  muted: "#8d98ab",
+  muted: "#d0d8e6",
   accent: "#ffd166",
   good: "#5ce7a0",
   danger: "#ff5d5d",
 };
 
 /**
- * Text is drawn at a higher resolution than the 640×360 canvas, so VT323
+ * Text is drawn at a higher resolution than the 640×360 canvas, so the pixel font
  * stays sharp when the game is scaled up to fill the screen (no blur, no
  * fuzzy edges). Plain text only: no shadow, stroke or outline anywhere.
  */
@@ -56,5 +61,7 @@ export const TEXT_RESOLUTION = Math.min(4, Math.max(2, Math.ceil(DPR * 2)));
 
 /** Text style helper. `size` is the real font size in canvas pixels. */
 export function textStyle(size = UI.body, color = TEXT.white, extra = {}) {
-  return { fontFamily: FONT, fontSize: `${size}px`, color, resolution: TEXT_RESOLUTION, ...extra };
+  const { sentence, ...rest } = extra;
+  const heading = size >= HEADING_SIZE && !sentence;
+  return { fontFamily: heading ? FONT : FONT_BODY, fontStyle: heading ? "normal" : "600", fontSize: `${heading ? size : Math.round(size * BODY_SCALE * 10) / 10}px`, color, resolution: TEXT_RESOLUTION, ...rest };
 }

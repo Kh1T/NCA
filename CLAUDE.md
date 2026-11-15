@@ -48,10 +48,10 @@ Phaser 4, Vite, Vitest, JavaScript ES modules. 640×360 pixel-art canvas, Scale.
 - Every alert option must have a visible cost; a test fails the build if any is free.
 
 ## Text sizes and layout
-- Sizes come from `UI` in `src/constants.js` (body 16, big 22, title 32, huge 48 canvas px). Nothing under 16.
+- Sizes come from `UI` in `src/constants.js` (body 18, big 24, title 32, huge 48 canvas px). Nothing under 18.
 - Buttons the player taps during play are 34–40 px tall. On a phone in landscape the canvas shows at about 1.04–1.1×.
 - `src/sim/__tests__/text.test.js` fails if any rules/content line is over 12 words (glossary: 20). Science Sources pages are exempt.
-- Text is plain VT323 with no shadow, stroke or outline. `textStyle` renders it at 2–4× resolution so it stays sharp when scaled.
+- Text is plain Jersey 15 with no shadow, stroke or outline. `textStyle` renders it at 2–4× resolution so it stays sharp when scaled.
 - Every text must stay inside its box: check with `window.__overflow()` after layout changes.
 - Edit files with UTF-8-safe tools (PowerShell 5 `Get-Content`/`Set-Content` garbles characters like · ° ↗).
 
@@ -59,7 +59,7 @@ Phaser 4, Vite, Vitest, JavaScript ES modules. 640×360 pixel-art canvas, Scale.
 - Audience: children 7–12. Show, don't tell: icons, animation and color over sentences.
 - Max ~12 words per on-screen message, simple words, one idea at a time.
 - Info/"Did you know?" content is on demand (info button), never forced.
-- Font: VT323, bundled locally, large sizes for readability, no text effects.
+- Font: Jersey 15, bundled locally, large sizes for readability, no text effects.
 - The game must be explainable in a 30-second demo: simple loop, few taps per day.
 - The core of the challenge is resource decisions: every choice has a visible gain and cost, and the best choice depends on the situation.
 - Must work on desktop and mobile: touch targets of at least 44px, no hover-only interactions.

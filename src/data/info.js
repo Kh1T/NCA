@@ -2,7 +2,7 @@
 // Each card: a big picture, a title, 1–3 short lines (12 words or fewer each),
 // and an optional glossary term for READ MORE.
 //
-// art: { icon } draws a big pixel icon, { building } draws a finished building,
+// art: { icon } draws a big pixel icon, { gauge: "dose" } draws the radiation gauge, { building } draws a finished building,
 //      { ship: true } or { rover: true } draw those pictures.
 
 export const INFO = {
@@ -38,8 +38,8 @@ export const INFO = {
     glossary: "radiation",
   },
   "meter.dose": {
-    title: "Radiation dose", art: { icon: "dose" },
-    lines: ["How much radiation the crew soaked up.", "Keep it under the limit!"],
+    title: "Radiation dose", art: { gauge: "dose" },
+    lines: ["Too much radiation makes the crew sick.", "Stay in the green. At the limit, they go home."],
     glossary: "dose",
   },
   "meter.science": {

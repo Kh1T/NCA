@@ -22,7 +22,7 @@ export const BADGES = [
     test: ({ state }) => (state.stats?.shelters ?? 0) >= 1 },
   { id: "plant-whisperer", icon: "leaf", title: "Plant Whisperer", how: "Grow food 3 times.",
     test: ({ state }) => (state.stats?.foodGrown ?? 0) >= 3 },
-  { id: "photographer", icon: "camera", title: "Photographer", how: "Take all 5 crater photos.",
+  { id: "photographer", icon: "camera", title: "Photo Pro", how: "Take all 5 crater photos.",
     test: ({ state }) => (state.photosTaken ?? 0) >= 5 },
   { id: "perfect-shot", icon: "star", title: "Perfect Shot", how: "Take a 3-star photo.",
     test: ({ state }) => (state.photos ?? []).some((p) => p.stars >= 3) },

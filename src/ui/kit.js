@@ -122,7 +122,7 @@ export class Layer {
 
   /** Options: size, color, wrap (px), origin (0, 0.5, 1 or [x, y]), align. */
   text(x, y, str, o = {}) {
-    const style = textStyle(o.size ?? 16, o.color ?? TEXT.white, { align: o.align ?? "left", lineSpacing: o.lineSpacing ?? 0 });
+    const style = textStyle(o.size ?? UI.body, o.color ?? TEXT.white, { align: o.align ?? "left", lineSpacing: o.lineSpacing ?? 0, sentence: Boolean(o.wrap) });
     if (o.wrap) style.wordWrap = { width: o.wrap };
     const text = this.scene.add.text(Math.round(x), Math.round(y), str, style);
     const origin = o.origin ?? 0;
@@ -291,7 +291,7 @@ export class Layer {
 }
 
 /** Size of a block of wrapped pixel text, without leaving it on screen. */
-export function measure(scene, str, wrap, size = 16) {
+export function measure(scene, str, wrap, size = UI.body) {
   const probe = scene.add.text(0, 0, str, { ...textStyle(size, TEXT.white, { lineSpacing: 0 }), wordWrap: wrap ? { width: wrap } : undefined });
   const result = { width: probe.width, height: probe.height };
   probe.destroy();

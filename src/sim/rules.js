@@ -53,8 +53,8 @@ export const RESOURCES = ["oxygen", "air", "water", "food"];
  * the crew spends outside (more radiation).
  */
 export const ACTIONS = {
-  work: { label: "BUILD HARD", icon: "build", gain: [["build", "FAST"]], cost: [["dose", "MORE"]], slow: 1, outside: 0.5 },
-  rest: { label: "STAY INSIDE", icon: "crew", gain: [["dose", "LESS"], ["air", "SAVE"]], cost: [["build", "SLOW"]], slow: 0.5, outside: 0 },
+  work: { label: "BUILD HARD", icon: "build", gain: [["build", "FAST BUILDS"]], cost: [["dose", "MORE RADIATION"]], slow: 1, outside: 0.5 },
+  rest: { label: "STAY INSIDE", icon: "crew", gain: [["dose", "LESS RADIATION"]], cost: [["build", "SLOW BUILDS"]], slow: 0.5, outside: 0 },
   repair: { label: "FIX IT", icon: "wrench", gain: [["wrench", "FIX"]], cost: [["power", "-1"], ["build", "SLOW"]], slow: 0.5, outside: 0.3 },
   grow: { label: "GROW FOOD", icon: "leaf", gain: [["food", "MORE"]], cost: [["water", "-"], ["build", "SLOW"]], slow: 0.5, outside: 0.1 },
   trip: { label: "ROVER TRIP", icon: "rover", gain: [["camera", "PHOTOS"]], cost: [["power", "-2"], ["dose", "MORE"]], slow: 0.5, outside: 0.5 },
@@ -397,7 +397,7 @@ export function checklist(state) {
     return { id, icon: id === "rover" ? "rover" : null, label: ITEMS[id].short, done: b.status === "done", busy: b.status === "building", packed: b.packed };
   });
   items.push({ id: "photos", icon: "camera", label: `PHOTOS ${state.photosTaken}/${PHOTO.TARGETS}`, done: state.photosTaken >= PHOTO.TARGETS });
-  items.push({ id: "night", icon: "moon", label: "SURVIVE NIGHT", done: state.outcome?.kind === "success" || (state.day > state.totalDays && !state.outcome?.cause) });
+  items.push({ id: "night", icon: "moon", label: "GET TO DAWN", done: state.outcome?.kind === "success" || (state.day > state.totalDays && !state.outcome?.cause) });
   return items;
 }
 

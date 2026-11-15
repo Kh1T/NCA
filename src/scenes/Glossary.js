@@ -44,7 +44,7 @@ export class Glossary extends Phaser.Scene {
     // Search box: a real text field, so phones show their keyboard.
     this.search = this.add.dom(330, 22).createFromHTML(
       '<input type="search" placeholder="search..." aria-label="Search words" autocomplete="off" '
-      + 'style="width:200px;height:26px;font:20px VT323,monospace;background:#10141c;color:#f2f5fa;'
+      + 'style="width:200px;height:26px;font:600 18px Nunito,sans-serif;background:#10141c;color:#f2f5fa;'
       + 'border:1px solid #ffd166;padding:0 6px;box-sizing:border-box;outline:none" />',
     );
     this.searchInput = this.search.node.querySelector("input");
@@ -202,13 +202,13 @@ export class Glossary extends Phaser.Scene {
     const art = C.gfx();
     drawIcon(art, entry.icon, x + 12, y + 12, 6);
     C.text(x + 108, y, entry.term.toUpperCase(), { size: UI.title, color: TEXT.accent, wrap: 200 });
-    C.text(x + 108, y + 64, entry.source === "spaceplace" ? "NASA SPACE PLACE TOPIC" : "MOON BASE WORD", { color: TEXT.muted });
+    C.text(x + 108, y + 64, entry.source === "spaceplace" ? "NASA SPACE PLACE" : "MOON BASE WORD", { color: TEXT.muted });
     C.text(x, y + 108, entry.def, { size: UI.big, wrap: 304 });
     if (entry.source === "spaceplace") {
       const link = C.text(x, y + 218, "LEARN MORE AT NASA SPACE PLACE ↗", { color: TEXT.good });
       link.setInteractive({ useHandCursor: true }).on("pointerdown", () => openLink(spacePlaceLink(entry.term)));
     }
-    C.text(x, y + 242, "Our own words. Topics: NASA Space Place.", { color: TEXT.muted });
+    C.text(x, y + 242, "Topics from NASA Space Place.", { color: TEXT.muted });
   }
 
   close() {

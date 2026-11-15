@@ -1,5 +1,6 @@
 ﻿import Phaser from "phaser";
-import "@fontsource/vt323";
+import "@fontsource/jersey-15";
+import "@fontsource/nunito/600.css";
 import "./game.css";
 import { HEIGHT, PALETTE, WIDTH } from "./constants.js";
 import { Alert } from "./scenes/Alert.js";
@@ -20,6 +21,15 @@ import { Story } from "./scenes/Story.js";
 import { Title } from "./scenes/Title.js";
 import { UiTest } from "./scenes/UiTest.js";
 import { findOverflow } from "./utils/overflow.js";
+
+// Pixel art stays crisp (nearest sampling), but text is drawn at 2-4x and shrunk
+// smoothly, so letters keep an even width at any window size.
+const updateText = Phaser.GameObjects.Text.prototype.updateText;
+Phaser.GameObjects.Text.prototype.updateText = function patched(...args) {
+  const result = updateText.apply(this, args);
+  this.texture?.setFilter(Phaser.Textures.FilterMode.LINEAR);
+  return result;
+};
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,

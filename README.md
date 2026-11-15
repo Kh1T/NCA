@@ -238,7 +238,7 @@ Living on the Moon is not one big problem. It is a hundred small trade-offs made
 - Space weather: NASA DONKI, Community Coordinated Modeling Center.
 - Crater images: NASA/GSFC/Arizona State University (Lunar Reconnaissance Orbiter) and NASA (Artemis II).
 - Studies: NASA Open Science Data Repository.
-- Font: VT323 by Peter Hull (SIL Open Font License), bundled locally.
+- Font: Jersey 15 by Sarah Cadigan-Fried (SIL Open Font License), bundled locally.
 - Glossary topics: NASA Space Place (spaceplace.nasa.gov/glossary). Definitions written for this game.
 - Team: [fill in here]
 - License: [fill in here]

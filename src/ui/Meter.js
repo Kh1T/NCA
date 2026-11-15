@@ -46,7 +46,7 @@ export class Meter {
     this.bar.clear();
     this.bar.fillStyle(0x232a36, 1);
     this.bar.fillRect(this.barX, by, this.barW, 7);
-    this.bar.fillStyle(danger ? 0xff5d5d : this.color, 1);
+    this.bar.fillStyle(danger ? 0xff5d5d : o.zone ?? this.color, 1);
     this.bar.fillRect(this.barX, by, Math.round(this.barW * share), 7);
     // A notch pattern in danger, so the warning does not rely on colour alone.
     if (danger) {

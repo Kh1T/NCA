@@ -14,9 +14,9 @@ import { playMusic, sfx } from "../ui/sfx.js";
  */
 const CARDS = [
   { title: "BUILD YOUR BASE", line: "Walk to a flag and tap it. 3 builds at once.", art: "build" },
-  { title: "EXPLORE WHILE YOU WAIT", line: "Builds take days. Drive the rover and snap crater photos!", art: "explore" },
+  { title: "EXPLORE WHILE YOU WAIT", line: "Drive the rover and snap crater photos!", art: "explore" },
   { title: "WATCH YOUR SUPPLIES", line: "One choice a day. Keep every bar out of the red!", art: "supplies" },
-  { title: "SURVIVE THE NIGHT TO WIN", line: "No sun at night! Charge your battery before dark.", art: "win" },
+  { title: "SURVIVE THE NIGHT TO WIN", line: "Do all 3 to win. Charge up before night!", art: "win" },
 ];
 
 const PANEL = { x: 40, y: 40, w: 560, h: 250 };
@@ -182,7 +182,7 @@ export class HowTo extends Phaser.Scene {
     moon.setPosition(cx - 170, cy - 20);
     this.tweens.add({ targets: moon, y: cy - 70, duration: 1600, yoyo: true, repeat: -1 });
     // What a win needs: everything built + 5 photos + the night.
-    const goals = [["build", "BUILD ALL"], ["camera", "5 PHOTOS"], ["battery", "NIGHT"]];
+    const goals = [["build", "BUILD ALL"], ["camera", "5 PHOTOS"], ["moon", "SURVIVE NIGHT"]];
     goals.forEach(([icon, label], i) => {
       const gx = cx - 60 + i * 110;
       const g = C.gfx();

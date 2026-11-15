@@ -24,9 +24,9 @@ export class Boot extends Phaser.Scene {
   }
 
   async create() {
-    // Wait for the pixel font so the first text is not drawn in a fallback font.
+    // Wait for the fonts so the first text is not drawn in a fallback font.
     try {
-      await document.fonts.load('16px "VT323"');
+      await Promise.all([document.fonts.load('16px "Jersey 15"'), document.fonts.load('600 16px "Nunito"')]);
     } catch {
       // Offline or blocked: the monospace fallback is fine.
     }

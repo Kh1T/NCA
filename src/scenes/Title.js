@@ -6,7 +6,7 @@ import { drawIcon } from "../ui/icons.js";
 import { Layer, clearFocusFor } from "../ui/kit.js";
 import { isMuted, playMusic } from "../ui/sfx.js";
 import { openSound } from "../ui/SoundPanel.js";
-import { resetSeen, seen } from "../utils/progress.js";
+import { seen } from "../utils/progress.js";
 
 export class Title extends Phaser.Scene {
   constructor() {
@@ -35,10 +35,8 @@ export class Title extends Phaser.Scene {
     this.tweens.add({ targets: [play.bg], scaleX: 1.03, scaleY: 1.06, duration: 700, yoyo: true, repeat: -1 });
     // The rest of the menu: each is a picture plus one word.
     const menu = [
-      ["STORY", "book", () => this.scene.start("Story", { next: "Title" }), "Story"],
       ["BADGES", "medal", () => this.scene.start("Badges"), "Badges"],
       ["WORDS", "question", () => this.scene.start("Glossary", { from: "Title" }), "Glossary"],
-      ["SOURCES", "science", () => this.scene.start("Credits", { from: "Title" }), "Credits"],
     ].filter(([, , , key]) => this.scene.manager.keys[key]);
     menu.forEach(([label, icon, go], i) => {
       const bx = WIDTH / 2 + (i - (menu.length - 1) / 2) * 132;
@@ -46,13 +44,8 @@ export class Title extends Phaser.Scene {
     });
     const mute = L.iconButton(612, 28, isMuted() ? "mute" : "sound", () => openSound(this, { onClose: () => mute.setIcon(isMuted() ? "mute" : "sound") }));
     playMusic("menu");
-    // Show every tutorial and the story again (for a new player on the same device).
-    const tipsNote = L.text(52, 22, "", { color: TEXT.good });
-    L.iconButton(28, 28, "question", () => {
-      resetSeen();
-      tipsNote.setText("TIPS ON AGAIN!");
-      this.time.delayedCall(1800, () => tipsNote.setText(""));
-    });
+    // Corner button: where the facts come from.
+    L.iconButton(28, 28, "science", () => this.scene.start("Credits", { from: "Title" }));
     L.focusFirst(play);
 
     const best = readBest();

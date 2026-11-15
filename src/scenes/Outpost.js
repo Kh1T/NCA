@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { GROUND_Y, HEIGHT, PALETTE, TEXT, WIDTH, textStyle } from "../constants.js";
+import { GROUND_Y, HEIGHT, PALETTE, TEXT, UI, WIDTH, textStyle } from "../constants.js";
 import { ITEMS } from "../sim/buildings.js";
 import { isNight } from "../sim/rules.js";
 import { drawShip, drawSite } from "../ui/art.js";
@@ -60,16 +60,16 @@ export class Outpost extends Phaser.Scene {
     // The ship. There is only one astronaut: you.
     const ship = this.add.graphics();
     drawShip(ship, SHIP_X, GROUND_Y);
-    this.add.text(SHIP_X, GROUND_Y + 4, "SHIP", textStyle(16, "#23262d")).setOrigin(0.5, 0);
+    this.add.text(SHIP_X, GROUND_Y + 4, "SHIP", textStyle(UI.body, "#23262d")).setOrigin(0.5, 0);
 
     // Building sites.
     this.sites = {};
     for (const [id, x] of Object.entries(SITE_X)) {
       const g = this.add.graphics();
-      const name = this.add.text(x, GROUND_Y + 4, ITEMS[id].short, textStyle(16, "#23262d")).setOrigin(0.5, 0);
+      const name = this.add.text(x, GROUND_Y + 4, ITEMS[id].short, textStyle(UI.body, "#23262d")).setOrigin(0.5, 0);
       // A status badge floats above each site: a picture, not a word.
       const status = this.add.graphics().setDepth(4);
-      const days = this.add.text(x + 9, GROUND_Y - 78, "", textStyle(16, TEXT.accent)).setOrigin(0, 0.5).setDepth(4);
+      const days = this.add.text(x + 9, GROUND_Y - 78, "", textStyle(UI.body, TEXT.accent)).setOrigin(0, 0.5).setDepth(4);
       const hit = this.add.rectangle(x, GROUND_Y - 24, 52, 52, 0x000000, 0.001).setInteractive({ useHandCursor: true });
       hit.on("pointerdown", () => this.walkTo(x, id));
       this.sites[id] = { g, name, status, days, x };
@@ -87,7 +87,7 @@ export class Outpost extends Phaser.Scene {
     this.physics.add.collider(this.player, this.solids);
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12, 0, 40);
 
-    this.prompt = this.add.text(0, 0, "", textStyle(16, TEXT.accent, { backgroundColor: "#05060a", padding: { x: 3, y: 2 } })).setOrigin(0.5, 1).setDepth(20);
+    this.prompt = this.add.text(0, 0, "", textStyle(UI.body, TEXT.accent, { backgroundColor: "#05060a", padding: { x: 3, y: 2 } })).setOrigin(0.5, 1).setDepth(20);
     this.prompt.setInteractive({ useHandCursor: true });
     this.prompt.on("pointerdown", () => this.interact());
 
@@ -164,7 +164,7 @@ export class Outpost extends Phaser.Scene {
   say(text, icon = null) {
     this.bubble?.destroy();
     const pad = 6;
-    const label = this.add.text(0, 0, text, textStyle(16, "#05060a", { wordWrap: { width: 170 } }));
+    const label = this.add.text(0, 0, text, textStyle(UI.body, "#05060a", { wordWrap: { width: 170 } }));
     // The box is always sized to the wrapped text, so the words never spill out.
     const w = label.width + pad * 2 + (icon ? 22 : 0);
     const h = label.height + pad * 2;

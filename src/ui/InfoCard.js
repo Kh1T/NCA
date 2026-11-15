@@ -75,6 +75,38 @@ export function drawArt(g, art, cx, cy, size = 1) {
   }
 }
 
+/** Share of the dose limit where each zone starts (the HUD bar turns red at 75%). */
+export const DOSE_ZONES = { careful: 0.5, toomuch: 0.75 };
+
+/** A tall gauge: green, amber and red zones, the limit at the top and a marker for the crew's dose now. */
+function drawDoseGauge(L, x, y, w, h, state) {
+  const g = L.gfx();
+  const bx = x + 22;
+  const top = y + 26;
+  const bh = h - 40;
+  const bw = 26;
+  const zoneY = (share) => top + bh * (1 - share);
+  const zones = [
+    [0, DOSE_ZONES.careful, PALETTE.good, "SAFE"],
+    [DOSE_ZONES.careful, DOSE_ZONES.toomuch, PALETTE.warn, "CAREFUL"],
+    [DOSE_ZONES.toomuch, 1, PALETTE.danger, "TOO MUCH"],
+  ];
+  for (const [from, to, color, label] of zones) {
+    g.fillStyle(color, 1);
+    g.fillRect(bx, zoneY(to), bw, zoneY(from) - zoneY(to));
+    L.text(bx + bw + 8, (zoneY(from) + zoneY(to)) / 2, label, { color: `#${color.toString(16).padStart(6, "0")}`, origin: [0, 0.5] });
+  }
+  g.lineStyle(1, 0xffffff, 1);
+  g.strokeRect(bx, top, bw, bh);
+  L.text(bx + bw / 2, y + 4, `LIMIT ${Math.round(state.doseLimit)}`, { origin: 0.5, color: TEXT.white });
+  // The crew's dose now: an arrow pointing at the gauge.
+  const share = Math.min(1, state.doseMSv / state.doseLimit);
+  const my = zoneY(share);
+  g.fillStyle(0xffffff, 1);
+  g.fillTriangle(bx - 2, my, bx - 14, my - 7, bx - 14, my + 7);
+  g.fillRect(bx - 2, my - 1, bw + 4, 2);
+}
+
 /**
  * The "Did you know?" card: a big picture, a title, 1–3 short lines,
  * READ MORE (opens the glossary) and CLOSE. Only ever opened by the player.
@@ -91,9 +123,14 @@ export function openInfo(scene, id, { onClose, depth = 700 } = {}) {
 
   // The picture sits on its own little stage and bobs gently.
   L.rect(x + 14, y + 14, 150, 150, 0x0b1018, 1).setStrokeStyle(1, PALETTE.panelEdge);
-  const art = L.gfx();
-  drawArt(art, entry.art ?? {}, x + 89, y + 89);
-  scene.tweens.add({ targets: art, y: art.y - 4, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+  const state = scene.registry.get("state");
+  if (entry.art?.gauge && state) {
+    drawDoseGauge(L, x + 14, y + 14, 150, 150, state);
+  } else {
+    const art = L.gfx();
+    drawArt(art, entry.art ?? {}, x + 89, y + 89);
+    scene.tweens.add({ targets: art, y: art.y - 4, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+  }
 
   const tx = x + 180;
   L.text(tx, y + 14, "DID YOU KNOW?", { color: "#6cc5ff" });

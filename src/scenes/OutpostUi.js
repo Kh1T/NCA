@@ -9,6 +9,7 @@ import {
   recordChoice, repairTarget, roverBatteryAtLaunch,
 } from "../sim/rules.js";
 import { BuildQueue } from "../ui/BuildQueue.js";
+import { drawGhostBars } from "../ui/ghostBars.js";
 import { ITEM_MAKES as MAKES, ITEM_NEEDS as NEEDS, drawChips } from "../ui/chips.js";
 import { runTutorial } from "../ui/Coach.js";
 import { dataBadge } from "../ui/DataBadge.js";
@@ -23,9 +24,9 @@ import { SITE_X } from "./Outpost.js";
 
 const METERS = ["power", "oxygen", "air", "water", "food", "dose"];
 const CHANGE_ICON = { power: "power", oxygen: "oxygen", air: "air", water: "water", food: "food", doseMSv: "dose" };
-const LIST_X = 488;
+const LIST_X = 472;
 const LIST_Y = 94;
-const LIST_W = 148;
+const LIST_W = 164;
 
 /** One short line that explains today's card. */
 function situationLine(state, card) {
@@ -189,7 +190,7 @@ export class OutpostUi extends Phaser.Scene {
     this.meters.air.set(s.air, C.CAP, { danger: low("air") });
     this.meters.water.set(s.water, C.CAP, { danger: low("water") });
     this.meters.food.set(s.food, C.CAP, { danger: low("food") });
-    this.meters.dose.set(s.doseMSv, s.doseLimit, { text: s.doseMSv.toFixed(1), danger: s.doseMSv > s.doseLimit * 0.75 });
+    this.meters.dose.set(s.doseMSv, s.doseLimit, { text: `${s.doseMSv < 10 ? s.doseMSv.toFixed(1) : Math.round(s.doseMSv)}/${Math.round(s.doseLimit)}`, danger: s.doseMSv > s.doseLimit * 0.75, zone: s.doseMSv > s.doseLimit * 0.5 ? 0xffb347 : 0x5ce7a0 });
     const day = Math.min(s.day, s.totalDays);
     this.dayText.setText(`DAY ${day}`);
     this.dateText.setText(niceDate(dateForDay(s.missionDate, day)).toUpperCase());
@@ -391,6 +392,7 @@ export class OutpostUi extends Phaser.Scene {
         sfx("build");
         this.close();
         this.world.say(`Building the ${item.name.toLowerCase()}!`, ITEM_ICON[id]);
+        if (activeBuilds(s).length >= MAX_ACTIVE_BUILDS) this.time.delayedCall(500, () => this.openWaitPopup());
       }, { enabled: check.ok, w: 140, icon: "build" });
       if (!check.ok) drawChips(L, x + 16, noteY, [["lock", check.reason.toUpperCase(), TEXT.danger]], { size: UI.body });
       else this.slotPips(L, x + 16, noteY, activeBuilds(s).length);
@@ -428,6 +430,31 @@ export class OutpostUi extends Phaser.Scene {
     }
     L.focus.items = [...L.focus.items.filter((i) => !made.includes(i)), ...made];
     L.focusFirst(made[0].enabled && made.length > 1 ? made[0] : made[made.length - 1]);
+  }
+
+  /** All build slots are busy: nudge the player to use the wait. */
+  openWaitPopup() {
+    if (this.modal || this.busy) return;
+    const s = this.state;
+    this.world.frozen = true;
+    const L = this.modalLayer();
+    const x = 150;
+    const y = 90;
+    const w = 340;
+    const h = 180;
+    L.panel(x, y, w, h, { edge: PALETTE.accent });
+    this.slotPips(L, x + 16, y + 14, MAX_ACTIVE_BUILDS);
+    L.text(x + w / 2, y + 54, canTrip(s) ? "Builds take days. Go take photos!" : "Builds take days. Skip ahead!", { size: UI.big, origin: [0.5, 0], wrap: w - 32, align: "center" });
+    const by = y + h - 30;
+    if (canTrip(s)) {
+      const trip = L.button(x + 90, by, "ROVER", () => { this.close(); this.openDay(); }, { w: 140, h: 38, icon: "rover" });
+      L.button(x + w - 90, by, "NEXT DAY", () => { this.close(); this.openDay(); }, { w: 140, h: 38, icon: "play" });
+      L.focusFirst(trip);
+    } else {
+      L.button(x + 90, by, "LOOK AROUND", () => this.close(), { w: 140, h: 38, key: "ESCAPE" });
+      const next = L.button(x + w - 90, by, "NEXT DAY", () => { this.close(); this.openDay(); }, { w: 140, h: 38, icon: "play", key: "ENTER" });
+      L.focusFirst(next);
+    }
   }
 
   /** Three boxes: which build slots are in use. */
@@ -483,16 +510,17 @@ export class OutpostUi extends Phaser.Scene {
       resultLayer?.destroy();
       resultLayer = new Layer(this, { depth: 201 });
       const changes = previewChoice(s, id);
-      const chips = [];
+      const rows = [];
       for (const [key, icon] of Object.entries(CHANGE_ICON)) {
-        const value = Math.round((changes[key] ?? 0) * 10) / 10;
-        if (!value) continue;
-        const good = key === "doseMSv" ? value <= 0 : value > 0;
-        chips.push([icon, `${value > 0 ? "+" : ""}${value}`, key === "doseMSv" ? "#ffb347" : good ? TEXT.good : TEXT.danger]);
+        const delta = Math.round((changes[key] ?? 0) * 10) / 10;
+        if (!delta) continue;
+        const now = s[key];
+        const max = key === "power" ? s.batteryCap : key === "doseMSv" ? s.doseLimit : C.CAP;
+        rows.push({ id: icon, now, max, delta, badWhenUp: key === "doseMSv" });
       }
       hint.setVisible(false);
       resultLayer.text(x + 16, y + 250, "TODAY:", { color: TEXT.muted, size: UI.big });
-      drawChips(resultLayer, x + 96, y + 250, chips, { maxWidth: w - 112, size: UI.big });
+      drawGhostBars(resultLayer, x + 96, y + 253, rows);
       sfx("tick");
     };
     this.plan = { action: null };
@@ -506,7 +534,7 @@ export class OutpostUi extends Phaser.Scene {
       drawChips(L, cx - ow / 2 + 10, top + 80, a.gain.map(([ic, t]) => [ic, t, TEXT.good]), { size: UI.body, iconScale: 1.2, maxWidth: ow - 20, gap: 10 });
       drawChips(L, cx - ow / 2 + 10, top + 108, a.cost.map(([ic, t]) => [ic, t, TEXT.danger]), { size: UI.body, iconScale: 1.2, maxWidth: ow - 20, gap: 10 });
     });
-    const hint = L.text(x + 16, y + 250, "PICK ONE CHOICE. SEE WHAT CHANGES.", { color: TEXT.muted, size: UI.big });
+    const hint = L.text(x + 16, y + 250, "TAP ONE CHOICE.", { color: TEXT.muted, size: UI.big });
 
     const by = y + h - 28;
     L.button(x + 90, by, "BACK", () => {
