@@ -1,0 +1,57 @@
+[
+  {
+    "nasaId": "PIA13225",
+    "name": "Orientale Basin",
+    "kidFact": "A giant bullseye made by an asteroid impact. Its rings are mountain ranges.",
+    "credit": "NASA/GSFC/Arizona State University",
+    "mission": "Lunar Reconnaissance Orbiter (LROC)",
+    "file": "assets/craters/PIA13225.jpg",
+    "nasaTitle": "Orientale Basin",
+    "dateCreated": "2010-06-17",
+    "link": "https://images.nasa.gov/details/PIA13225"
+  },
+  {
+    "nasaId": "art002e009282",
+    "name": "Vavilov Crater",
+    "kidFact": "Long shadows show every bump. The Artemis II crew took this photo in April 2026.",
+    "credit": "NASA",
+    "mission": "Artemis II",
+    "file": "assets/craters/art002e009282.jpg",
+    "nasaTitle": "Shadows Across Vavilov Crater",
+    "dateCreated": "2026-04-06",
+    "link": "https://images.nasa.gov/details/art002e009282"
+  },
+  {
+    "nasaId": "art002e021296",
+    "name": "Hertzsprung Basin",
+    "kidFact": "An ancient, huge crater on the far side, seen as Artemis II flew around the Moon.",
+    "credit": "NASA",
+    "mission": "Artemis II",
+    "file": "assets/craters/art002e021296.jpg",
+    "nasaTitle": "Hertzsprung in Light and Shadow",
+    "dateCreated": "2026-04-06",
+    "link": "https://images.nasa.gov/details/art002e021296"
+  },
+  {
+    "nasaId": "PIA12939",
+    "name": "Mare Moscoviense",
+    "kidFact": "One of the few dark lava plains on the far side. The line marks where it meets the highlands.",
+    "credit": "NASA/GSFC/Arizona State University",
+    "mission": "Lunar Reconnaissance Orbiter (LROC)",
+    "file": "assets/craters/PIA12939.jpg",
+    "nasaTitle": "Mare Moscoviense Constellation Site",
+    "dateCreated": "2010-03-13",
+    "link": "https://images.nasa.gov/details/PIA12939"
+  },
+  {
+    "nasaId": "PIA13089",
+    "name": "Tsiolkovskiy Crater",
+    "kidFact": "Big boulders near the mountain in the middle of Tsiolkovskiy crater.",
+    "credit": "NASA/GSFC/Arizona State University",
+    "mission": "Lunar Reconnaissance Orbiter (LROC)",
+    "file": "assets/craters/PIA13089.jpg",
+    "nasaTitle": "Floor of Tsiolkovskiy -- Constellation Region of Interest",
+    "dateCreated": "2010-05-03",
+    "link": "https://images.nasa.gov/details/PIA13089"
+  }
+]

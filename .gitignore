@@ -1,6 +1,26 @@
+# dependencies
 node_modules/
+
+# build output
 dist/
 .vite/
+.cache/
+
+# netlify local deploy artifacts
+.netlify/
+
+# os / editor noise
 *.local
 .DS_Store
 Thumbs.db
+
+# generated sprite assets (recreate with: npm run sprites)
+# the whole tree is derived from scripts/generate-sprites.mjs
+public/sprites/*
+!public/sprites/play.html
+!public/sprites/play.js
+!public/sprites/play.css
+
+# secrets / local notes
+.env
+docs
