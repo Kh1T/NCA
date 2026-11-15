@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#08121a" />
+    <meta name="description" content="Take an Astropeer astronaut for a walk across the Jezero Crater surface." />
+    <title>Astropeer — Surface Walk</title>
+    <link rel="stylesheet" href="play.css" />
+  </head>
+  <body>
+    <main class="walkabout">
+      <section class="scene" id="scene" data-condition="normal" tabindex="-1" aria-label="Mars surface walkabout">
+        <div class="sky" aria-hidden="true">
+          <div class="stars"></div>
+          <div class="sun-glow"></div>
+          <div class="earth"></div>
+        </div>
+        <div class="ridge ridge-far" id="ridgeFar" aria-hidden="true"></div>
+        <div class="ridge ridge-near" id="ridgeNear" aria-hidden="true"></div>
+        <div class="haze" aria-hidden="true"></div>
+
+        <div class="world" id="world" aria-hidden="true">
+          <div class="ground"></div>
+          <div class="ground-layer" id="groundLayer"></div>
+          <div class="outpost">
+            <div class="outpost-tag">OUTPOST <strong>04</strong></div>
+            <div class="habitat">
+              <span class="hab-window hab-window-1"></span>
+              <span class="hab-window hab-window-2"></span>
+              <span class="hab-door"></span>
+              <span class="hab-band"></span>
+            </div>
+            <div class="solar-array solar-left"><i></i><i></i><i></i><i></i></div>
+            <div class="solar-array solar-right"><i></i><i></i><i></i><i></i></div>
+            <div class="outpost-mast"><i></i></div>
+            <div class="outpost-pad"></div>
+          </div>
+          <div class="astronaut-layer" id="astronautLayer">
+            <div class="astronaut" id="astronaut"></div>
+          </div>
+        </div>
+
+        <div class="dust" aria-hidden="true"></div>
+        <div class="condition-wash" aria-hidden="true"></div>
+        <div class="vignette" aria-hidden="true"></div>
+
+        <header class="hud">
+          <div class="hud-left">
+            <a class="back-link" href="../"><span aria-hidden="true">←</span> OUTPOST</a>
+            <span class="hud-divider" aria-hidden="true"></span>
+            <span class="hud-title">SURFACE WALK <small>JEZERO CRATER</small></span>
+          </div>
+          <div class="hud-right">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span class="hud-readout">WALKED <strong id="distance">0000 M</strong></span>
+          </div>
+        </header>
+
+        <div class="condition-panel" id="conditionPanel" role="group" aria-label="Suit condition"></div>
+
+        <aside class="status-card" id="statusCard" aria-live="polite">
+          <span class="status-kicker">SUIT CONDITION</span>
+          <strong id="statusLabel">Normal</strong>
+          <p id="statusText">Healthy crew member on a standard sol.</p>
+        </aside>
+
+        <div class="key-hint" id="keyHint">
+          <kbd>A</kbd><kbd>D</kbd><span>or</span><kbd>←</kbd><kbd>→</kbd><span>to walk</span>
+          <span class="hint-sep" aria-hidden="true"></span>
+          <kbd>SHIFT</kbd><span>to hurry</span>
+        </div>
+
+        <div class="touch-controls" id="touchControls">
+          <button id="touchLeft" type="button" aria-label="Walk left">←</button>
+          <button id="touchRight" type="button" aria-label="Walk right">→</button>
+        </div>
+
+        <div class="start-overlay" id="startOverlay">
+          <div class="start-card" role="dialog" aria-modal="true" aria-labelledby="startTitle" aria-describedby="startCopy">
+            <div class="start-top">
+              <div class="start-mark" aria-hidden="true">AP</div>
+              <div class="start-preview" id="startPreview" aria-hidden="true"></div>
+            </div>
+            <p class="eyebrow">CREW SURFACE TRAINING · JZ-04</p>
+            <h1 id="startTitle">Take a walk <em>on Mars.</em></h1>
+            <p class="start-copy" id="startCopy">Your astronaut has a suit, twin oxygen tanks, and a handheld mini computer. Walk the ridge toward Outpost 04, and switch suit conditions to see how the crew adapts to each hazard.</p>
+            <div class="start-controls" aria-label="Controls">
+              <span class="controls-group"><kbd>A</kbd><kbd>D</kbd><span>or</span><kbd>←</kbd><kbd>→</kbd><span>to move</span></span>
+              <span class="controls-group"><kbd>SHIFT</kbd><span>to hurry</span></span>
+            </div>
+            <button class="start-button" id="startButton" type="button">START WALK <span aria-hidden="true">→</span></button>
+            <p class="start-footnote">Choose a suit condition after you start · 6-frame walk cycle</p>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="play.js" defer></script>
+  </body>
+</html>

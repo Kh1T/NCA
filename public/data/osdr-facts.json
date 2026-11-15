@@ -1,0 +1,80 @@
+{
+  "source": "NASA Open Science Data Repository (OSDR)",
+  "sourceUrl": "https://osdr.nasa.gov/bio/repo/",
+  "fetchedAt": "2026-11-14T10:16:49.045Z",
+  "note": "The plain-language sentence is written for this game. The study is a real OSDR record on the same topic.",
+  "facts": [
+    {
+      "tag": "radiation",
+      "text": "Space radiation can damage the DNA inside cells. Scientists study how cells repair it, so crews can stay longer and stay safe.",
+      "searchTerm": "space radiation DNA damage",
+      "study": {
+        "accession": "OSD-210",
+        "title": "Approaches for Surveying Cosmic Radiation Damage in Large Populations of Arabidopsis thaliana Seeds- an Antarctic Example",
+        "link": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-210"
+      }
+    },
+    {
+      "tag": "bone",
+      "text": "With less gravity pulling on them, bones lose strength. Space station crews exercise about two hours a day to protect them.",
+      "searchTerm": "bone loss spaceflight",
+      "study": {
+        "accession": "OSD-342",
+        "title": "Targeting myostatin/activin A protects against skeletal muscle and bone loss during spaceflight [plasma proteomics]",
+        "link": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-342"
+      }
+    },
+    {
+      "tag": "muscle",
+      "text": "Muscles shrink in low gravity when they are not used. Studies on the space station look for ways to keep them strong.",
+      "searchTerm": "muscle atrophy spaceflight",
+      "study": {
+        "accession": "OSD-225",
+        "title": "Expression profiling of soleus muscle under the effect of simulated spaceflight",
+        "link": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-225"
+      }
+    },
+    {
+      "tag": "plants",
+      "text": "Plants can grow in space. Astronauts have grown lettuce on the space station and eaten it.",
+      "searchTerm": "plant growth spaceflight",
+      "study": {
+        "accession": "OSD-615",
+        "title": "Glycome profiling and immunohistochemistry uncover changes in cell walls of Arabidopsis thaliana roots during spaceflight: Advanced Plant EXperiment (APEX) 03-1 Raw Dataset",
+        "link": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-615"
+      }
+    },
+    {
+      "tag": "sleep",
+      "text": "Space has no normal day and night, so body clocks get confused. Good rest is part of mission safety.",
+      "searchTerm": "circadian spaceflight",
+      "study": null
+    },
+    {
+      "tag": "immune",
+      "text": "Spaceflight can change how the immune system works. Staying rested and well fed helps a crew stay healthy.",
+      "searchTerm": "immune spaceflight",
+      "study": {
+        "accession": "OSD-943",
+        "title": "Longitudinal transcriptomic and epigenetic analysis in astronauts reveals dynamic immune response to spaceflight [DNA methylation]",
+        "link": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-943"
+      }
+    },
+    {
+      "tag": "microbes",
+      "text": "Tiny microbes travel with every crew. Scientists keep track of which ones live on the space station.",
+      "searchTerm": "microbial International Space Station",
+      "study": {
+        "accession": "OSD-400",
+        "title": "Draft Genomes of Fungi Isolated from the International Space Station during the Microbial Tracking-2 Experiment",
+        "link": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-400"
+      }
+    },
+    {
+      "tag": "dust",
+      "text": "Moon dust is sharp and sticky. Scientists study what it could do to lungs and machines.",
+      "searchTerm": "lunar dust",
+      "study": null
+    }
+  ]
+}
